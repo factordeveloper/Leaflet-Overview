@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lección 6: GeoJSON</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Rajdhani:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        :root { --cyber-cyan: #00ffff; --cyber-magenta: #ff00ff; --cyber-card: #0d0f1a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0a12 0%, #1a0a2e 50%, #0d0d1a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e8ff;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .lesson-header {
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.05);
+        }
+        
+        .lesson-number {
+            background: transparent;
+            color: var(--cyber-cyan);
+            padding: 5px 15px;
+            border: 1px solid var(--cyber-cyan);
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
+        h1 { font-family: 'Orbitron', sans-serif; color: var(--cyber-cyan); margin-bottom: 15px; letter-spacing: 2px; }
+        .intro { color: #8892a8; line-height: 1.6; }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            border-radius: 4px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.03);
+        }
+        
+        .card h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--cyber-cyan);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        #mapa {
+            height: 450px;
+            border-radius: 4px;
+            border: 1px solid var(--cyber-cyan);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+        }
+        
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 11px;
+            line-height: 1.4;
+            margin: 10px 0;
+        }
+        
+        .code-block .comment {
+            color: #6a9955;
+        }
+        
+        .code-block .keyword { color: #00ffff; }
+        .code-block .string { color: #ff00ff; }
+        
+        .code-block .number {
+            color: #b5cea8;
+        }
+        
+        .code-block .function {
+            color: #dcdcaa;
+        }
+        
+        .code-block .property {
+            color: #9cdcfe;
+        }
+        
+        .explanation {
+            background: rgba(0, 255, 255, 0.05);
+            border-left: 4px solid var(--cyber-cyan);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .explanation h3 {
+            color: var(--cyber-cyan);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .explanation ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .explanation li {
+            margin: 5px 0;
+        }
+        
+        .tip {
+            background: rgba(255, 0, 255, 0.08);
+            border-left: 4px solid var(--cyber-magenta);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .tip strong { color: var(--cyber-magenta); }
+        
+        .info-panel {
+            background: var(--cyber-card);
+            border: 1px solid var(--cyber-cyan);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        .info-panel h4 {
+            margin-bottom: 10px;
+        }
+        
+        #featureInfo {
+            min-height: 60px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--cyber-cyan);
+            color: var(--cyber-cyan);
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+        
+        .legend {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lesson-header">
+            <span class="lesson-number">Lección 6 de 8</span>
+            <h1>📊 GeoJSON</h1>
+            <p class="intro">
+                GeoJSON es un formato estándar para representar datos geográficos. Es la forma más 
+                común de intercambiar datos entre aplicaciones de mapas. Aprenderás a cargar, 
+                estilizar y manipular datos GeoJSON en Leaflet.
+            </p>
+        </div>
+        
+        <div class="content-grid">
+            <div class="card">
+                <h2>🗺️ Datos GeoJSON en el Mapa</h2>
+                <div id="mapa"></div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e74c3c;"></div>
+                        <span>Parques</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #3498db;"></div>
+                        <span>Estaciones Metro</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #2ecc71; height: 3px;"></div>
+                        <span>Línea Metro</span>
+                    </div>
+                </div>
+                
+                <div class="info-panel">
+                    <h4>📍 Información del elemento:</h4>
+                    <div id="featureInfo">Haz clic en un elemento del mapa para ver sus propiedades.</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>📄 Estructura GeoJSON</h2>
+                
+                <div class="explanation">
+                    <h3>¿Qué es GeoJSON?</h3>
+                    <p>Es JSON con estructura específica para datos geográficos. Tiene 3 tipos principales:</p>
+                    <ul>
+                        <li><strong>Point:</strong> Un punto (marcador)</li>
+                        <li><strong>LineString:</strong> Una línea</li>
+                        <li><strong>Polygon:</strong> Un polígono</li>
+                    </ul>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Estructura de un Feature (elemento)</span>
+{
+    <span class="property">"type"</span>: <span class="string">"Feature"</span>,
+    <span class="property">"properties"</span>: {
+        <span class="property">"nombre"</span>: <span class="string">"Mi lugar"</span>,
+        <span class="property">"categoria"</span>: <span class="string">"parque"</span>
+    },
+    <span class="property">"geometry"</span>: {
+        <span class="property">"type"</span>: <span class="string">"Point"</span>,
+        <span class="property">"coordinates"</span>: [<span class="number">-3.7038</span>, <span class="number">40.4168</span>]
+    }
+}
+                </div>
+                
+                <div class="tip">
+                    <strong>⚠️ Importante:</strong> En GeoJSON las coordenadas son <code>[longitud, latitud]</code>, 
+                    ¡al revés que en Leaflet! Leaflet lo convierte automáticamente.
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// FeatureCollection (colección de elementos)</span>
+{
+    <span class="property">"type"</span>: <span class="string">"FeatureCollection"</span>,
+    <span class="property">"features"</span>: [
+        { <span class="comment">/* Feature 1 */</span> },
+        { <span class="comment">/* Feature 2 */</span> },
+        { <span class="comment">/* ... */</span> }
+    ]
+}
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-grid" style="margin-top: 20px;">
+            <div class="card">
+                <h2>🔧 Cargar GeoJSON</h2>
+                
+                <div class="explanation">
+                    <h3>Cargar datos directamente</h3>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Datos GeoJSON como variable</span>
+<span class="keyword">const</span> datos = {
+    <span class="property">"type"</span>: <span class="string">"FeatureCollection"</span>,
+    <span class="property">"features"</span>: [
+        {
+            <span class="property">"type"</span>: <span class="string">"Feature"</span>,
+            <span class="property">"properties"</span>: { <span class="property">"name"</span>: <span class="string">"Retiro"</span> },
+            <span class="property">"geometry"</span>: {
+                <span class="property">"type"</span>: <span class="string">"Polygon"</span>,
+                <span class="property">"coordinates"</span>: [[...]]
+            }
+        }
+    ]
+};
+
+<span class="comment">// Añadir al mapa</span>
+L.<span class="function">geoJSON</span>(datos).<span class="function">addTo</span>(mapa);
+                </div>
+                
+                <div class="explanation">
+                    <h3>Cargar desde archivo/URL</h3>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Usando fetch</span>
+<span class="function">fetch</span>(<span class="string">'datos.geojson'</span>)
+    .<span class="function">then</span>(response => response.<span class="function">json</span>())
+    .<span class="function">then</span>(data => {
+        L.<span class="function">geoJSON</span>(data).<span class="function">addTo</span>(mapa);
+    });
+
+<span class="comment">// Con async/await</span>
+<span class="keyword">async function</span> <span class="function">cargarDatos</span>() {
+    <span class="keyword">const</span> response = <span class="keyword">await</span> <span class="function">fetch</span>(<span class="string">'datos.geojson'</span>);
+    <span class="keyword">const</span> data = <span class="keyword">await</span> response.<span class="function">json</span>();
+    L.<span class="function">geoJSON</span>(data).<span class="function">addTo</span>(mapa);
+}
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>🎨 Estilizar GeoJSON</h2>
+                
+                <div class="explanation">
+                    <h3>Estilos estáticos</h3>
+                </div>
+                
+                <div class="code-block">
+L.<span class="function">geoJSON</span>(datos, {
+    style: {
+        color: <span class="string">'#e74c3c'</span>,
+        weight: <span class="number">2</span>,
+        fillColor: <span class="string">'#e74c3c'</span>,
+        fillOpacity: <span class="number">0.3</span>
+    }
+}).<span class="function">addTo</span>(mapa);
+                </div>
+                
+                <div class="explanation">
+                    <h3>Estilos dinámicos (según propiedades)</h3>
+                </div>
+                
+                <div class="code-block">
+L.<span class="function">geoJSON</span>(datos, {
+    style: <span class="keyword">function</span>(feature) {
+        <span class="comment">// Color según categoría</span>
+        <span class="keyword">const</span> colores = {
+            <span class="string">'parque'</span>: <span class="string">'#2ecc71'</span>,
+            <span class="string">'edificio'</span>: <span class="string">'#3498db'</span>,
+            <span class="string">'zona'</span>: <span class="string">'#e74c3c'</span>
+        };
+        
+        <span class="keyword">return</span> {
+            color: colores[feature.properties.categoria],
+            weight: <span class="number">2</span>,
+            fillOpacity: <span class="number">0.4</span>
+        };
+    }
+}).<span class="function">addTo</span>(mapa);
+                </div>
+                
+                <div class="explanation">
+                    <h3>Personalizar marcadores (puntos)</h3>
+                </div>
+                
+                <div class="code-block">
+L.<span class="function">geoJSON</span>(puntos, {
+    pointToLayer: <span class="keyword">function</span>(feature, latlng) {
+        <span class="comment">// Usar circleMarker en vez de marcador</span>
+        <span class="keyword">return</span> L.<span class="function">circleMarker</span>(latlng, {
+            radius: <span class="number">8</span>,
+            fillColor: <span class="string">'#3498db'</span>,
+            color: <span class="string">'white'</span>,
+            weight: <span class="number">2</span>,
+            fillOpacity: <span class="number">0.8</span>
+        });
+    }
+}).<span class="function">addTo</span>(mapa);
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 20px;">
+            <h2>⚡ Interactividad con GeoJSON</h2>
+            
+            <div class="content-grid">
+                <div>
+                    <div class="explanation">
+                        <h3>onEachFeature - Eventos por elemento</h3>
+                    </div>
+                    
+                    <div class="code-block">
+L.<span class="function">geoJSON</span>(datos, {
+    onEachFeature: <span class="keyword">function</span>(feature, layer) {
+        <span class="comment">// Añadir popup con propiedades</span>
+        <span class="keyword">if</span> (feature.properties) {
+            layer.<span class="function">bindPopup</span>(
+                <span class="string">`&lt;b&gt;${feature.properties.nombre}&lt;/b&gt;`</span>
+            );
+        }
+        
+        <span class="comment">// Añadir eventos</span>
+        layer.<span class="function">on</span>({
+            mouseover: <span class="keyword">function</span>(e) {
+                e.target.<span class="function">setStyle</span>({
+                    weight: <span class="number">4</span>,
+                    fillOpacity: <span class="number">0.7</span>
+                });
+            },
+            mouseout: <span class="keyword">function</span>(e) {
+                geojsonLayer.<span class="function">resetStyle</span>(e.target);
+            },
+            click: <span class="keyword">function</span>(e) {
+                mapa.<span class="function">fitBounds</span>(e.target.<span class="function">getBounds</span>());
+            }
+        });
+    }
+}).<span class="function">addTo</span>(mapa);
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="explanation">
+                        <h3>filter - Filtrar elementos</h3>
+                    </div>
+                    
+                    <div class="code-block">
+<span class="comment">// Solo mostrar parques grandes</span>
+L.<span class="function">geoJSON</span>(datos, {
+    filter: <span class="keyword">function</span>(feature) {
+        <span class="keyword">return</span> feature.properties.tipo === <span class="string">'parque'</span> 
+            && feature.properties.area > <span class="number">10000</span>;
+    }
+}).<span class="function">addTo</span>(mapa);
+                    </div>
+                    
+                    <div class="explanation">
+                        <h3>Métodos útiles de la capa GeoJSON</h3>
+                    </div>
+                    
+                    <div class="code-block">
+<span class="keyword">const</span> geojsonLayer = L.<span class="function">geoJSON</span>(datos).<span class="function">addTo</span>(mapa);
+
+<span class="comment">// Añadir más datos</span>
+geojsonLayer.<span class="function">addData</span>(nuevosDatos);
+
+<span class="comment">// Obtener límites</span>
+mapa.<span class="function">fitBounds</span>(geojsonLayer.<span class="function">getBounds</span>());
+
+<span class="comment">// Iterar sobre elementos</span>
+geojsonLayer.<span class="function">eachLayer</span>(<span class="keyword">function</span>(layer) {
+    console.<span class="function">log</span>(layer.feature.properties);
+});
+
+<span class="comment">// Limpiar todos los datos</span>
+geojsonLayer.<span class="function">clearLayers</span>();
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="leccion-05-capas-controles.html" class="nav-btn">← Anterior</a>
+            <a href="leccion-07-iconos-personalizados.html" class="nav-btn">Siguiente: Iconos Personalizados →</a>
+        </div>
+    </div>
+    
+    <script>
+        // Crear mapa
+        const mapa = L.map('mapa').setView([40.4168, -3.7038], 13);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CartoDB'
+        }).addTo(mapa);
+        
+        // Referencia al panel de info
+        const featureInfo = document.getElementById('featureInfo');
+        
+        // Datos GeoJSON de ejemplo - Parques (Polígonos)
+        const parquesGeoJSON = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "nombre": "Parque del Retiro",
+                        "area_hectareas": 118,
+                        "tipo": "parque",
+                        "descripcion": "El pulmón verde de Madrid"
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[
+                            [-3.6830, 40.4220],
+                            [-3.6650, 40.4220],
+                            [-3.6650, 40.4100],
+                            [-3.6830, 40.4100],
+                            [-3.6830, 40.4220]
+                        ]]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "nombre": "Jardines de Sabatini",
+                        "area_hectareas": 2.5,
+                        "tipo": "jardin",
+                        "descripcion": "Jardines junto al Palacio Real"
+                    },
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [[
+                            [-3.7150, 40.4215],
+                            [-3.7100, 40.4215],
+                            [-3.7100, 40.4185],
+                            [-3.7150, 40.4185],
+                            [-3.7150, 40.4215]
+                        ]]
+                    }
+                }
+            ]
+        };
+        
+        // Datos GeoJSON - Estaciones de metro (Puntos)
+        const estacionesGeoJSON = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "nombre": "Sol",
+                        "lineas": ["1", "2", "3"],
+                        "tipo": "intercambiador"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-3.7038, 40.4168]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "nombre": "Gran Vía",
+                        "lineas": ["1", "5"],
+                        "tipo": "estacion"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-3.7055, 40.4200]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "nombre": "Tribunal",
+                        "lineas": ["1", "10"],
+                        "tipo": "estacion"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-3.7010, 40.4260]
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "nombre": "Retiro",
+                        "lineas": ["2"],
+                        "tipo": "estacion"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [-3.6830, 40.4200]
+                    }
+                }
+            ]
+        };
+        
+        // Datos GeoJSON - Línea de metro (LineString)
+        const lineaMetroGeoJSON = {
+            "type": "Feature",
+            "properties": {
+                "nombre": "Línea 1",
+                "color": "#009EE3",
+                "estaciones": 33
+            },
+            "geometry": {
+                "type": "LineString",
+                "coordinates": [
+                    [-3.7038, 40.4168],
+                    [-3.7055, 40.4200],
+                    [-3.7010, 40.4260],
+                    [-3.6980, 40.4320]
+                ]
+            }
+        };
+        
+        // Función para mostrar info
+        function mostrarInfo(feature) {
+            let html = `<strong>${feature.properties.nombre}</strong><br>`;
+            
+            if (feature.properties.area_hectareas) {
+                html += `Área: ${feature.properties.area_hectareas} hectáreas<br>`;
+            }
+            if (feature.properties.lineas) {
+                html += `Líneas: ${feature.properties.lineas.join(', ')}<br>`;
+            }
+            if (feature.properties.descripcion) {
+                html += `${feature.properties.descripcion}`;
+            }
+            if (feature.properties.estaciones) {
+                html += `Estaciones: ${feature.properties.estaciones}`;
+            }
+            
+            featureInfo.innerHTML = html;
+        }
+        
+        // Cargar parques con estilo dinámico
+        const parquesLayer = L.geoJSON(parquesGeoJSON, {
+            style: function(feature) {
+                const colores = {
+                    'parque': '#27ae60',
+                    'jardin': '#2ecc71'
+                };
+                return {
+                    color: colores[feature.properties.tipo] || '#e74c3c',
+                    weight: 2,
+                    fillColor: colores[feature.properties.tipo] || '#e74c3c',
+                    fillOpacity: 0.4
+                };
+            },
+            onEachFeature: function(feature, layer) {
+                layer.bindPopup(`
+                    <b>${feature.properties.nombre}</b><br>
+                    ${feature.properties.descripcion}<br>
+                    <small>Área: ${feature.properties.area_hectareas} ha</small>
+                `);
+                
+                layer.on({
+                    mouseover: function(e) {
+                        e.target.setStyle({
+                            weight: 4,
+                            fillOpacity: 0.7
+                        });
+                        mostrarInfo(feature);
+                    },
+                    mouseout: function(e) {
+                        parquesLayer.resetStyle(e.target);
+                    },
+                    click: function(e) {
+                        mapa.fitBounds(e.target.getBounds());
+                    }
+                });
+            }
+        }).addTo(mapa);
+        
+        // Cargar estaciones con circleMarker personalizado
+        const estacionesLayer = L.geoJSON(estacionesGeoJSON, {
+            pointToLayer: function(feature, latlng) {
+                const radio = feature.properties.tipo === 'intercambiador' ? 12 : 8;
+                return L.circleMarker(latlng, {
+                    radius: radio,
+                    fillColor: '#3498db',
+                    color: 'white',
+                    weight: 3,
+                    fillOpacity: 0.9
+                });
+            },
+            onEachFeature: function(feature, layer) {
+                layer.bindPopup(`
+                    <b>🚇 ${feature.properties.nombre}</b><br>
+                    Líneas: ${feature.properties.lineas.join(', ')}<br>
+                    <small>Tipo: ${feature.properties.tipo}</small>
+                `);
+                
+                layer.on({
+                    mouseover: function(e) {
+                        e.target.setStyle({
+                            fillColor: '#e74c3c'
+                        });
+                        mostrarInfo(feature);
+                    },
+                    mouseout: function(e) {
+                        e.target.setStyle({
+                            fillColor: '#3498db'
+                        });
+                    }
+                });
+            }
+        }).addTo(mapa);
+        
+        // Cargar línea de metro
+        const lineaLayer = L.geoJSON(lineaMetroGeoJSON, {
+            style: {
+                color: '#2ecc71',
+                weight: 4,
+                opacity: 0.8,
+                dashArray: '10, 5'
+            },
+            onEachFeature: function(feature, layer) {
+                layer.bindPopup(`
+                    <b>${feature.properties.nombre}</b><br>
+                    ${feature.properties.estaciones} estaciones
+                `);
+                
+                layer.on('mouseover', function() {
+                    mostrarInfo(feature);
+                });
+            }
+        }).addTo(mapa);
+    </script>
+</body>
+</html>

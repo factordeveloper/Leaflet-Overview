@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lección 5: Capas y Controles</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Rajdhani:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        :root { --cyber-cyan: #00ffff; --cyber-magenta: #ff00ff; --cyber-card: #0d0f1a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0a12 0%, #1a0a2e 50%, #0d0d1a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e8ff;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        .lesson-header {
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.05);
+        }
+        
+        .lesson-number {
+            background: transparent;
+            color: var(--cyber-cyan);
+            padding: 5px 15px;
+            border: 1px solid var(--cyber-cyan);
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
+        h1 { font-family: 'Orbitron', sans-serif; color: var(--cyber-cyan); margin-bottom: 15px; letter-spacing: 2px; }
+        .intro { color: #8892a8; line-height: 1.6; }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            border-radius: 4px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.03);
+        }
+        
+        .card h2 { font-family: 'Orbitron', sans-serif; color: var(--cyber-cyan); margin-bottom: 15px; font-size: 1.2em; }
+        #mapa { height: 450px; border-radius: 4px; border: 1px solid var(--cyber-cyan); box-shadow: 0 0 20px rgba(0, 255, 255, 0.15); }
+        
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            margin: 10px 0;
+        }
+        
+        .code-block .comment {
+            color: #6a9955;
+        }
+        
+        .code-block .keyword { color: #00ffff; }
+        .code-block .string { color: #ff00ff; }
+        
+        .code-block .number {
+            color: #b5cea8;
+        }
+        
+        .code-block .function {
+            color: #dcdcaa;
+        }
+        
+        .explanation {
+            background: rgba(0, 255, 255, 0.05);
+            border-left: 4px solid var(--cyber-cyan);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .explanation h3 {
+            color: var(--cyber-cyan);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .explanation ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .explanation li {
+            margin: 5px 0;
+        }
+        
+        .tip {
+            background: rgba(255, 0, 255, 0.08);
+            border-left: 4px solid var(--cyber-magenta);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .tip strong { color: var(--cyber-magenta); }
+        
+        .warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .warning strong {
+            color: #ff9800;
+        }
+        
+        .layers-info {
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+        }
+        
+        .layers-info h4 {
+            margin-bottom: 10px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--cyber-cyan);
+            color: var(--cyber-cyan);
+            padding: 12px 25px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lesson-header">
+            <span class="lesson-number">Lección 5 de 8</span>
+            <h1>🗂️ Capas y Controles</h1>
+            <p class="intro">
+                Aprende a organizar tu mapa en capas (layers), usar grupos de capas (Layer Groups), 
+                y añadir controles interactivos para que el usuario pueda cambiar entre diferentes 
+                vistas y capas de información.
+            </p>
+        </div>
+        
+        <div class="content-grid">
+            <div class="card">
+                <h2>🗺️ Mapa con Control de Capas</h2>
+                <div id="mapa"></div>
+                
+                <div class="layers-info">
+                    <h4>🎛️ Controles disponibles:</h4>
+                    <ul>
+                        <li>Usa el control de capas (esquina superior derecha) para cambiar el mapa base</li>
+                        <li>Activa/desactiva las capas de información (overlays)</li>
+                        <li>El control de escala está en la esquina inferior izquierda</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>🎨 Capas Base (Base Layers)</h2>
+                
+                <div class="explanation">
+                    <h3>¿Qué son las capas base?</h3>
+                    <p>Son los mapas de fondo. Solo puede estar activa UNA a la vez (como estaciones de radio).</p>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Definir diferentes capas base</span>
+<span class="keyword">const</span> osm = L.<span class="function">tileLayer</span>(
+    <span class="string">'https://tile.openstreetmap.org/{z}/{x}/{y}.png'</span>,
+    { attribution: <span class="string">'&copy; OpenStreetMap'</span> }
+);
+
+<span class="keyword">const</span> cartoDB = L.<span class="function">tileLayer</span>(
+    <span class="string">'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'</span>,
+    { attribution: <span class="string">'&copy; CartoDB'</span> }
+);
+
+<span class="keyword">const</span> dark = L.<span class="function">tileLayer</span>(
+    <span class="string">'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'</span>,
+    { attribution: <span class="string">'&copy; CartoDB'</span> }
+);
+
+<span class="comment">// Objeto con las capas base</span>
+<span class="keyword">const</span> capasBase = {
+    <span class="string">"OpenStreetMap"</span>: osm,
+    <span class="string">"CartoDB Claro"</span>: cartoDB,
+    <span class="string">"CartoDB Oscuro"</span>: dark
+};
+                </div>
+                
+                <div class="tip">
+                    <strong>💡 Tip:</strong> El nombre que usas en el objeto es el que aparecerá 
+                    en el control de capas.
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-grid" style="margin-top: 20px;">
+            <div class="card">
+                <h2>📚 Layer Groups (Grupos)</h2>
+                
+                <div class="explanation">
+                    <h3>Agrupar elementos relacionados</h3>
+                    <p>Puedes agrupar múltiples marcadores o formas para controlarlos juntos:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Crear marcadores</span>
+<span class="keyword">const</span> restaurante1 = L.<span class="function">marker</span>([<span class="number">40.42</span>, <span class="number">-3.71</span>])
+    .<span class="function">bindPopup</span>(<span class="string">'Restaurante A'</span>);
+<span class="keyword">const</span> restaurante2 = L.<span class="function">marker</span>([<span class="number">40.41</span>, <span class="number">-3.70</span>])
+    .<span class="function">bindPopup</span>(<span class="string">'Restaurante B'</span>);
+
+<span class="comment">// Agruparlos en un Layer Group</span>
+<span class="keyword">const</span> restaurantes = L.<span class="function">layerGroup</span>([
+    restaurante1,
+    restaurante2
+]);
+
+<span class="comment">// Añadir todo el grupo al mapa</span>
+restaurantes.<span class="function">addTo</span>(mapa);
+
+<span class="comment">// Puedes añadir más elementos después</span>
+<span class="keyword">const</span> restaurante3 = L.<span class="function">marker</span>([<span class="number">40.415</span>, <span class="number">-3.695</span>]);
+restaurantes.<span class="function">addLayer</span>(restaurante3);
+
+<span class="comment">// O eliminar elementos</span>
+restaurantes.<span class="function">removeLayer</span>(restaurante1);
+
+<span class="comment">// Limpiar todo el grupo</span>
+restaurantes.<span class="function">clearLayers</span>();
+                </div>
+                
+                <div class="explanation">
+                    <h3>Feature Group</h3>
+                    <p>Similar a LayerGroup pero con métodos adicionales:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="keyword">const</span> zonas = L.<span class="function">featureGroup</span>([
+    L.<span class="function">polygon</span>([[<span class="number">40.42</span>,<span class="number">-3.71</span>], [<span class="number">40.41</span>,<span class="number">-3.72</span>], [<span class="number">40.40</span>,<span class="number">-3.70</span>]]),
+    L.<span class="function">circle</span>([<span class="number">40.43</span>, <span class="number">-3.69</span>], {radius: <span class="number">300</span>})
+]).<span class="function">addTo</span>(mapa);
+
+<span class="comment">// FeatureGroup permite:</span>
+zonas.<span class="function">getBounds</span>();     <span class="comment">// Obtener límites del grupo</span>
+zonas.<span class="function">bindPopup</span>(<span class="string">'Todas las zonas'</span>); <span class="comment">// Popup para todo</span>
+
+<span class="comment">// Ajustar vista a todo el grupo</span>
+mapa.<span class="function">fitBounds</span>(zonas.<span class="function">getBounds</span>());
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>🎛️ Control de Capas</h2>
+                
+                <div class="explanation">
+                    <h3>Crear el control</h3>
+                    <p>El control permite al usuario cambiar capas:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Capas base (solo una activa)</span>
+<span class="keyword">const</span> capasBase = {
+    <span class="string">"OpenStreetMap"</span>: osm,
+    <span class="string">"CartoDB"</span>: cartoDB
+};
+
+<span class="comment">// Overlays (pueden estar varias activas)</span>
+<span class="keyword">const</span> overlays = {
+    <span class="string">"🍽️ Restaurantes"</span>: restaurantes,
+    <span class="string">"🏨 Hoteles"</span>: hoteles,
+    <span class="string">"🚌 Transporte"</span>: transporte
+};
+
+<span class="comment">// Crear y añadir el control</span>
+L.<span class="function">control</span>.<span class="function">layers</span>(capasBase, overlays, {
+    collapsed: <span class="keyword">false</span>,    <span class="comment">// Expandido por defecto</span>
+    position: <span class="string">'topright'</span> <span class="comment">// Posición</span>
+}).<span class="function">addTo</span>(mapa);
+                </div>
+                
+                <div class="warning">
+                    <strong>⚠️ Importante:</strong> Las capas base usan radio buttons (solo una), 
+                    los overlays usan checkboxes (múltiples).
+                </div>
+                
+                <div class="explanation">
+                    <h3>Otros controles</h3>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Control de escala</span>
+L.<span class="function">control</span>.<span class="function">scale</span>({
+    metric: <span class="keyword">true</span>,     <span class="comment">// Mostrar metros/km</span>
+    imperial: <span class="keyword">false</span>,  <span class="comment">// Ocultar millas</span>
+    position: <span class="string">'bottomleft'</span>
+}).<span class="function">addTo</span>(mapa);
+
+<span class="comment">// Control de zoom (se añade por defecto)</span>
+L.<span class="function">control</span>.<span class="function">zoom</span>({
+    position: <span class="string">'topleft'</span>,
+    zoomInTitle: <span class="string">'Acercar'</span>,
+    zoomOutTitle: <span class="string">'Alejar'</span>
+}).<span class="function">addTo</span>(mapa);
+
+<span class="comment">// Control de atribución</span>
+L.<span class="function">control</span>.<span class="function">attribution</span>({
+    prefix: <span class="string">'Mi App'</span>
+}).<span class="function">addTo</span>(mapa);
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 20px;">
+            <h2>🔧 Control Personalizado</h2>
+            
+            <div class="code-block">
+<span class="comment">// Crear un control personalizado</span>
+<span class="keyword">const</span> MiControl = L.Control.<span class="function">extend</span>({
+    options: {
+        position: <span class="string">'bottomright'</span>
+    },
+    
+    onAdd: <span class="keyword">function</span>(map) {
+        <span class="comment">// Crear el contenedor del control</span>
+        <span class="keyword">const</span> container = L.DomUtil.<span class="function">create</span>(<span class="string">'div'</span>, <span class="string">'mi-control'</span>);
+        container.innerHTML = <span class="string">'&lt;button onclick="centrarMapa()"&gt;🎯 Centrar&lt;/button&gt;'</span>;
+        
+        <span class="comment">// Evitar que clics propaguen al mapa</span>
+        L.DomEvent.<span class="function">disableClickPropagation</span>(container);
+        
+        <span class="keyword">return</span> container;
+    }
+});
+
+<span class="comment">// Instanciar y añadir</span>
+<span class="keyword">new</span> MiControl().<span class="function">addTo</span>(mapa);
+
+<span class="comment">// Función del botón</span>
+<span class="keyword">function</span> <span class="function">centrarMapa</span>() {
+    mapa.<span class="function">setView</span>([<span class="number">40.4168</span>, <span class="number">-3.7038</span>], <span class="number">13</span>);
+}
+                </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="leccion-04-eventos.html" class="nav-btn">← Anterior</a>
+            <a href="leccion-06-geojson.html" class="nav-btn">Siguiente: GeoJSON →</a>
+        </div>
+    </div>
+    
+    <script>
+        // Definir capas base
+        const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        });
+        
+        const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://carto.com/">CartoDB</a>'
+        });
+        
+        const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://carto.com/">CartoDB</a>'
+        });
+        
+        const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; <a href="https://www.esri.com/">Esri</a>'
+        });
+        
+        // Crear el mapa con una capa base inicial
+        const mapa = L.map('mapa', {
+            center: [40.4168, -3.7038],
+            zoom: 13,
+            layers: [osm] // Capa inicial
+        });
+        
+        // Crear grupos de overlays
+        
+        // Grupo de Restaurantes
+        const restaurantes = L.layerGroup([
+            L.marker([40.4200, -3.7050]).bindPopup('🍽️ <b>La Casa del Abuelo</b><br>Cocina tradicional'),
+            L.marker([40.4150, -3.7100]).bindPopup('🍽️ <b>Sobrino de Botín</b><br>Asador desde 1725'),
+            L.marker([40.4180, -3.6980]).bindPopup('🍽️ <b>Mercado de San Miguel</b><br>Tapas gourmet')
+        ]);
+        
+        // Grupo de Hoteles
+        const hoteles = L.layerGroup([
+            L.marker([40.4190, -3.6950]).bindPopup('🏨 <b>Hotel Palace</b><br>5 estrellas'),
+            L.marker([40.4220, -3.7080]).bindPopup('🏨 <b>Hotel Ritz</b><br>Lujo clásico'),
+            L.marker([40.4130, -3.7020]).bindPopup('🏨 <b>Hotel Urban</b><br>Diseño moderno')
+        ]);
+        
+        // Grupo de Monumentos (círculos)
+        const monumentos = L.featureGroup([
+            L.circle([40.4138, -3.6921], {
+                radius: 100,
+                color: '#e74c3c',
+                fillOpacity: 0.3
+            }).bindPopup('🏛️ <b>Museo del Prado</b>'),
+            L.circle([40.4186, -3.6883], {
+                radius: 80,
+                color: '#e74c3c',
+                fillOpacity: 0.3
+            }).bindPopup('🏛️ <b>Puerta de Alcalá</b>'),
+            L.circle([40.4168, -3.7038], {
+                radius: 70,
+                color: '#e74c3c',
+                fillOpacity: 0.3
+            }).bindPopup('🏛️ <b>Puerta del Sol</b>')
+        ]);
+        
+        // Grupo de Zonas (polígonos)
+        const zonas = L.featureGroup([
+            L.polygon([
+                [40.4220, -3.7100],
+                [40.4180, -3.7150],
+                [40.4140, -3.7100],
+                [40.4140, -3.7000],
+                [40.4180, -3.6950],
+                [40.4220, -3.7000]
+            ], {
+                color: '#3498db',
+                fillOpacity: 0.2
+            }).bindPopup('📍 <b>Centro Histórico</b>')
+        ]);
+        
+        // Añadir algunos overlays por defecto
+        restaurantes.addTo(mapa);
+        monumentos.addTo(mapa);
+        
+        // Objeto de capas base
+        const capasBase = {
+            "🗺️ OpenStreetMap": osm,
+            "🌤️ CartoDB Claro": cartoLight,
+            "🌙 CartoDB Oscuro": cartoDark,
+            "🛰️ Satélite (Esri)": esriSatellite
+        };
+        
+        // Objeto de overlays
+        const overlays = {
+            "🍽️ Restaurantes": restaurantes,
+            "🏨 Hoteles": hoteles,
+            "🏛️ Monumentos": monumentos,
+            "📍 Zonas": zonas
+        };
+        
+        // Crear control de capas
+        L.control.layers(capasBase, overlays, {
+            collapsed: true,
+            position: 'topright'
+        }).addTo(mapa);
+        
+        // Añadir control de escala
+        L.control.scale({
+            metric: true,
+            imperial: false,
+            position: 'bottomleft'
+        }).addTo(mapa);
+        
+        // Control personalizado para centrar
+        const ControlCentrar = L.Control.extend({
+            options: {
+                position: 'bottomright'
+            },
+            
+            onAdd: function(map) {
+                const container = L.DomUtil.create('div', 'leaflet-bar');
+                container.innerHTML = `
+                    <a href="#" title="Centrar mapa" 
+                       style="display: flex; align-items: center; justify-content: center; 
+                              width: 34px; height: 34px; background: white; text-decoration: none;
+                              font-size: 18px;"
+                       onclick="centrarMapa(); return false;">🎯</a>
+                `;
+                L.DomEvent.disableClickPropagation(container);
+                return container;
+            }
+        });
+        
+        new ControlCentrar().addTo(mapa);
+        
+        function centrarMapa() {
+            mapa.setView([40.4168, -3.7038], 13);
+        }
+    </script>
+</body>
+</html>

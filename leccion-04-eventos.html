@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lección 4: Eventos del Mapa</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Rajdhani:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        :root { --cyber-cyan: #00ffff; --cyber-magenta: #ff00ff; --cyber-card: #0d0f1a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0a12 0%, #1a0a2e 50%, #0d0d1a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e8ff;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .lesson-header {
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.05);
+        }
+        
+        .lesson-number {
+            background: transparent;
+            color: var(--cyber-cyan);
+            padding: 5px 15px;
+            border: 1px solid var(--cyber-cyan);
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
+        h1 { font-family: 'Orbitron', sans-serif; color: var(--cyber-cyan); margin-bottom: 15px; letter-spacing: 2px; }
+        .intro { color: #8892a8; line-height: 1.6; }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            border-radius: 4px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.03);
+        }
+        
+        .card h2 { font-family: 'Orbitron', sans-serif; color: var(--cyber-cyan); margin-bottom: 15px; font-size: 1.2em; }
+        #mapa { height: 400px; border-radius: 4px; border: 1px solid var(--cyber-cyan); box-shadow: 0 0 20px rgba(0, 255, 255, 0.15); }
+        
+        .code-block {
+            background: #0a0a12;
+            color: #d4d4d4;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            margin: 10px 0;
+        }
+        
+        .code-block .comment {
+            color: #6a9955;
+        }
+        
+        .code-block .keyword { color: #00ffff; }
+        .code-block .string { color: #ff00ff; }
+        
+        .code-block .number {
+            color: #b5cea8;
+        }
+        
+        .code-block .function {
+            color: #dcdcaa;
+        }
+        
+        .explanation {
+            background: rgba(0, 255, 255, 0.05);
+            border-left: 4px solid var(--cyber-cyan);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .explanation h3 {
+            color: var(--cyber-cyan);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .explanation ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .explanation li {
+            margin: 5px 0;
+        }
+        
+        .tip {
+            background: rgba(255, 0, 255, 0.08);
+            border-left: 4px solid var(--cyber-magenta);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .tip strong { color: var(--cyber-magenta); }
+        
+        .event-log {
+            background: #263238;
+            color: #80cbc4;
+            padding: 15px;
+            border-radius: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+        
+        .event-log .event-item {
+            padding: 3px 0;
+            border-bottom: 1px solid #37474f;
+        }
+        
+        .event-log .event-type {
+            color: var(--cyber-cyan);
+            font-weight: bold;
+        }
+        
+        .coords-display {
+            background: var(--cyber-card);
+            border: 1px solid var(--cyber-cyan);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .coords-display h4 {
+            margin-bottom: 10px;
+        }
+        
+        .coords-display .coords {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .btn {
+            background: transparent;
+            border: 1px solid var(--cyber-cyan);
+            color: var(--cyber-cyan);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            margin: 5px;
+            transition: transform 0.3s;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--cyber-cyan);
+            color: var(--cyber-cyan);
+            padding: 12px 25px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lesson-header">
+            <span class="lesson-number">Lección 4 de 8</span>
+            <h1>🎯 Eventos del Mapa</h1>
+            <p class="intro">
+                Los eventos permiten que tu mapa responda a las acciones del usuario: clics, 
+                movimientos del ratón, cambios de zoom, etc. Aprenderás a escuchar y manejar 
+                estos eventos para crear mapas verdaderamente interactivos.
+            </p>
+        </div>
+        
+        <div class="content-grid">
+            <div class="card">
+                <h2>🗺️ Mapa Interactivo</h2>
+                <div id="mapa"></div>
+                
+                <div class="coords-display">
+                    <h4>📍 Posición del cursor</h4>
+                    <div class="coords" id="coordenadas">Mueve el ratón sobre el mapa</div>
+                </div>
+                
+                <div style="margin-top: 10px;">
+                    <button class="btn" onclick="limpiarLog()">Limpiar Log</button>
+                    <button class="btn" onclick="limpiarMarcadores()">Limpiar Marcadores</button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>📋 Log de Eventos</h2>
+                <p style="color: #666; margin-bottom: 10px;">
+                    Interactúa con el mapa para ver los eventos en tiempo real:
+                </p>
+                <div class="event-log" id="eventLog">
+                    <div class="event-item">👋 ¡Bienvenido! Interactúa con el mapa...</div>
+                </div>
+                
+                <div class="explanation" style="margin-top: 15px;">
+                    <h3>Eventos que estamos escuchando:</h3>
+                    <ul>
+                        <li><strong>click:</strong> Clic en el mapa (añade marcador)</li>
+                        <li><strong>dblclick:</strong> Doble clic</li>
+                        <li><strong>mousemove:</strong> Movimiento del ratón</li>
+                        <li><strong>zoomend:</strong> Fin de cambio de zoom</li>
+                        <li><strong>moveend:</strong> Fin de movimiento del mapa</li>
+                        <li><strong>contextmenu:</strong> Clic derecho</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-grid" style="margin-top: 20px;">
+            <div class="card">
+                <h2>🖱️ Eventos del Mapa</h2>
+                
+                <div class="explanation">
+                    <h3>Evento click</h3>
+                    <p>El más común: detectar dónde hizo clic el usuario:</p>
+                </div>
+                
+                <div class="code-block">
+mapa.<span class="function">on</span>(<span class="string">'click'</span>, <span class="keyword">function</span>(e) {
+    <span class="comment">// e.latlng contiene las coordenadas del clic</span>
+    <span class="keyword">const</span> lat = e.latlng.lat;
+    <span class="keyword">const</span> lng = e.latlng.lng;
+    
+    <span class="comment">// Añadir marcador donde hizo clic</span>
+    L.<span class="function">marker</span>([lat, lng])
+        .<span class="function">addTo</span>(mapa)
+        .<span class="function">bindPopup</span>(<span class="string">`Lat: ${lat.toFixed(4)}&lt;br&gt;Lng: ${lng.toFixed(4)}`</span>)
+        .<span class="function">openPopup</span>();
+});
+                </div>
+                
+                <div class="explanation">
+                    <h3>Evento mousemove</h3>
+                    <p>Seguir la posición del cursor:</p>
+                </div>
+                
+                <div class="code-block">
+mapa.<span class="function">on</span>(<span class="string">'mousemove'</span>, <span class="keyword">function</span>(e) {
+    <span class="keyword">const</span> coords = e.latlng;
+    document.<span class="function">getElementById</span>(<span class="string">'display'</span>).innerHTML = 
+        <span class="string">`Lat: ${coords.lat.toFixed(4)}, Lng: ${coords.lng.toFixed(4)}`</span>;
+});
+                </div>
+                
+                <div class="explanation">
+                    <h3>Eventos de zoom y movimiento</h3>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Cuando cambia el zoom</span>
+mapa.<span class="function">on</span>(<span class="string">'zoomend'</span>, <span class="keyword">function</span>() {
+    console.<span class="function">log</span>(<span class="string">'Zoom actual:'</span>, mapa.<span class="function">getZoom</span>());
+});
+
+<span class="comment">// Cuando termina de moverse el mapa</span>
+mapa.<span class="function">on</span>(<span class="string">'moveend'</span>, <span class="keyword">function</span>() {
+    <span class="keyword">const</span> centro = mapa.<span class="function">getCenter</span>();
+    console.<span class="function">log</span>(<span class="string">'Centro:'</span>, centro);
+});
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>📍 Eventos en Marcadores</h2>
+                
+                <div class="explanation">
+                    <h3>Eventos comunes en marcadores</h3>
+                </div>
+                
+                <div class="code-block">
+<span class="keyword">const</span> marcador = L.<span class="function">marker</span>([<span class="number">40.42</span>, <span class="number">-3.70</span>]).<span class="function">addTo</span>(mapa);
+
+<span class="comment">// Clic en el marcador</span>
+marcador.<span class="function">on</span>(<span class="string">'click'</span>, <span class="keyword">function</span>(e) {
+    console.<span class="function">log</span>(<span class="string">'Marcador clickeado!'</span>);
+});
+
+<span class="comment">// Pasar ratón por encima</span>
+marcador.<span class="function">on</span>(<span class="string">'mouseover'</span>, <span class="keyword">function</span>() {
+    <span class="keyword">this</span>.<span class="function">openPopup</span>();
+});
+
+<span class="comment">// Sacar ratón del marcador</span>
+marcador.<span class="function">on</span>(<span class="string">'mouseout'</span>, <span class="keyword">function</span>() {
+    <span class="keyword">this</span>.<span class="function">closePopup</span>();
+});
+
+<span class="comment">// Si es arrastrable</span>
+marcador.<span class="function">on</span>(<span class="string">'dragend'</span>, <span class="keyword">function</span>(e) {
+    <span class="keyword">const</span> pos = e.target.<span class="function">getLatLng</span>();
+    console.<span class="function">log</span>(<span class="string">'Nueva posición:'</span>, pos);
+});
+                </div>
+                
+                <div class="tip">
+                    <strong>💡 Tip:</strong> Usa <code>once()</code> en lugar de <code>on()</code> 
+                    si quieres que el evento se ejecute solo una vez.
+                </div>
+                
+                <div class="explanation">
+                    <h3>Eliminar eventos</h3>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Definir la función del evento</span>
+<span class="keyword">function</span> <span class="function">miFuncion</span>(e) {
+    console.<span class="function">log</span>(<span class="string">'Evento!'</span>);
+}
+
+<span class="comment">// Añadir evento</span>
+mapa.<span class="function">on</span>(<span class="string">'click'</span>, miFuncion);
+
+<span class="comment">// Eliminar evento específico</span>
+mapa.<span class="function">off</span>(<span class="string">'click'</span>, miFuncion);
+
+<span class="comment">// Eliminar TODOS los eventos de un tipo</span>
+mapa.<span class="function">off</span>(<span class="string">'click'</span>);
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 20px;">
+            <h2>📚 Lista de Eventos Disponibles</h2>
+            <div class="content-grid" style="margin-top: 15px;">
+                <div class="explanation">
+                    <h3>Eventos del Mapa</h3>
+                    <ul>
+                        <li><strong>click, dblclick:</strong> Clics</li>
+                        <li><strong>mousedown, mouseup:</strong> Presionar/soltar ratón</li>
+                        <li><strong>mouseover, mouseout:</strong> Entrar/salir del mapa</li>
+                        <li><strong>mousemove:</strong> Movimiento del ratón</li>
+                        <li><strong>contextmenu:</strong> Clic derecho</li>
+                        <li><strong>keypress, keydown, keyup:</strong> Teclado</li>
+                        <li><strong>zoom, zoomstart, zoomend:</strong> Zoom</li>
+                        <li><strong>move, movestart, moveend:</strong> Movimiento</li>
+                        <li><strong>resize:</strong> Cambio de tamaño</li>
+                        <li><strong>load:</strong> Carga inicial</li>
+                    </ul>
+                </div>
+                <div class="explanation">
+                    <h3>Eventos de Capas/Marcadores</h3>
+                    <ul>
+                        <li><strong>add:</strong> Al añadir al mapa</li>
+                        <li><strong>remove:</strong> Al eliminar del mapa</li>
+                        <li><strong>popupopen, popupclose:</strong> Popups</li>
+                        <li><strong>tooltipopen, tooltipclose:</strong> Tooltips</li>
+                        <li><strong>drag, dragstart, dragend:</strong> Arrastrar</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="leccion-03-lineas-poligonos.html" class="nav-btn">← Anterior</a>
+            <a href="leccion-05-capas-controles.html" class="nav-btn">Siguiente: Capas y Controles →</a>
+        </div>
+    </div>
+    
+    <script>
+        // Crear mapa
+        const mapa = L.map('mapa').setView([40.4168, -3.7038], 13);
+        
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(mapa);
+        
+        // Referencias DOM
+        const eventLog = document.getElementById('eventLog');
+        const coordsDisplay = document.getElementById('coordenadas');
+        
+        // Array para marcadores
+        let marcadores = [];
+        
+        // Función para añadir al log
+        function logEvento(tipo, mensaje) {
+            const item = document.createElement('div');
+            item.className = 'event-item';
+            const hora = new Date().toLocaleTimeString();
+            item.innerHTML = `<span class="event-type">[${tipo}]</span> ${hora} - ${mensaje}`;
+            eventLog.insertBefore(item, eventLog.firstChild);
+            
+            // Limitar a 50 eventos
+            while (eventLog.children.length > 50) {
+                eventLog.removeChild(eventLog.lastChild);
+            }
+        }
+        
+        // Evento CLICK - añade marcador
+        mapa.on('click', function(e) {
+            const lat = e.latlng.lat.toFixed(4);
+            const lng = e.latlng.lng.toFixed(4);
+            
+            logEvento('click', `Coordenadas: [${lat}, ${lng}]`);
+            
+            // Crear marcador
+            const marcador = L.marker(e.latlng)
+                .addTo(mapa)
+                .bindPopup(`<b>Marcador</b><br>Lat: ${lat}<br>Lng: ${lng}`)
+                .openPopup();
+            
+            marcadores.push(marcador);
+            
+            // Evento en el marcador
+            marcador.on('click', function() {
+                logEvento('marker-click', 'Clic en marcador');
+            });
+        });
+        
+        // Evento DOBLE CLICK
+        mapa.on('dblclick', function(e) {
+            logEvento('dblclick', `Doble clic en [${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}]`);
+        });
+        
+        // Evento MOUSEMOVE - actualizar coordenadas
+        let lastMove = 0;
+        mapa.on('mousemove', function(e) {
+            const lat = e.latlng.lat.toFixed(6);
+            const lng = e.latlng.lng.toFixed(6);
+            coordsDisplay.innerHTML = `Lat: ${lat}, Lng: ${lng}`;
+            
+            // Limitar log de mousemove (cada 500ms)
+            const now = Date.now();
+            if (now - lastMove > 500) {
+                // logEvento('mousemove', `[${lat}, ${lng}]`); // Descomentado sería muy spam
+                lastMove = now;
+            }
+        });
+        
+        // Evento ZOOMEND
+        mapa.on('zoomend', function() {
+            logEvento('zoomend', `Nuevo nivel de zoom: ${mapa.getZoom()}`);
+        });
+        
+        // Evento MOVEEND
+        mapa.on('moveend', function() {
+            const centro = mapa.getCenter();
+            logEvento('moveend', `Centro: [${centro.lat.toFixed(4)}, ${centro.lng.toFixed(4)}]`);
+        });
+        
+        // Evento CONTEXTMENU (clic derecho)
+        mapa.on('contextmenu', function(e) {
+            logEvento('contextmenu', `Clic derecho en [${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}]`);
+        });
+        
+        // Evento LOAD
+        mapa.on('load', function() {
+            logEvento('load', 'Mapa cargado correctamente');
+        });
+        
+        // Funciones de los botones
+        function limpiarLog() {
+            eventLog.innerHTML = '<div class="event-item">📋 Log limpiado</div>';
+        }
+        
+        function limpiarMarcadores() {
+            marcadores.forEach(m => m.remove());
+            marcadores = [];
+            logEvento('limpiar', 'Todos los marcadores eliminados');
+        }
+    </script>
+</body>
+</html>

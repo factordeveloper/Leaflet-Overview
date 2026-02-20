@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curso de Leaflet - Aprende a crear mapas interactivos</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --cyber-cyan: #00ffff;
+            --cyber-magenta: #ff00ff;
+            --cyber-purple: #bf00ff;
+            --cyber-bg: #0a0a12;
+            --cyber-card: #0d0f1a;
+            --cyber-border: rgba(0, 255, 255, 0.2);
+            --cyber-glow: rgba(0, 255, 255, 0.3);
+        }
+        
+        body {
+            font-family: 'Rajdhani', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0a0a12 0%, #1a0a2e 50%, #0d0d1a 100%);
+            min-height: 100vh;
+            color: #e0e8ff;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .hero {
+            position: relative;
+            height: 50vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        #mapa-hero {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.3;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--cyber-cyan) 0%, var(--cyber-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 40px var(--cyber-glow);
+            letter-spacing: 2px;
+        }
+        
+        .hero p {
+            font-size: 1.2em;
+            color: #8892a8;
+            max-width: 600px;
+            margin-bottom: 30px;
+        }
+        
+        .badge {
+            background: var(--cyber-card);
+            border: 1px solid var(--cyber-border);
+            color: var(--cyber-cyan);
+            padding: 10px 25px;
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            display: inline-block;
+            margin-bottom: 20px;
+            box-shadow: 0 0 20px var(--cyber-glow);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .section-title {
+            font-family: 'Orbitron', sans-serif;
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 40px;
+            color: var(--cyber-cyan);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+        
+        .lessons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        
+        .lesson-card {
+            background: var(--cyber-card);
+            border-radius: 4px;
+            padding: 30px;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: #e0e8ff;
+            border: 1px solid var(--cyber-border);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .lesson-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--cyber-cyan), var(--cyber-magenta));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .lesson-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--cyber-cyan);
+            box-shadow: 0 0 30px var(--cyber-glow), inset 0 0 30px rgba(0,255,255,0.03);
+        }
+        
+        .lesson-card:hover::before {
+            opacity: 1;
+        }
+        
+        .lesson-number {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: transparent;
+            border: 1px solid var(--cyber-cyan);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 18px;
+            color: var(--cyber-cyan);
+            box-shadow: 0 0 15px var(--cyber-glow);
+        }
+        
+        .lesson-icon {
+            font-size: 50px;
+            margin-bottom: 15px;
+        }
+        
+        .lesson-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #fff;
+            letter-spacing: 1px;
+        }
+        
+        .lesson-card p {
+            color: #8892a8;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .lesson-topics {
+            margin-top: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .topic-tag {
+            background: rgba(0, 255, 255, 0.1);
+            color: var(--cyber-cyan);
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            border: 1px solid rgba(0, 255, 255, 0.2);
+        }
+        
+        .difficulty {
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .difficulty-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #333;
+        }
+        
+        .difficulty-dot.active {
+            background: var(--cyber-cyan);
+            box-shadow: 0 0 8px var(--cyber-cyan);
+        }
+        
+        .cta-section {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, #0d0f1a 0%, #1a0a2e 100%);
+            margin-top: 40px;
+            border-top: 1px solid var(--cyber-border);
+        }
+        
+        .cta-section h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2em;
+            margin-bottom: 15px;
+            color: var(--cyber-cyan);
+            letter-spacing: 3px;
+        }
+        
+        .cta-section p {
+            color: #8892a8;
+            margin-bottom: 30px;
+        }
+        
+        .cta-btn {
+            display: inline-block;
+            background: transparent;
+            color: var(--cyber-cyan);
+            padding: 15px 40px;
+            border-radius: 4px;
+            border: 1px solid var(--cyber-cyan);
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            font-size: 16px;
+            letter-spacing: 3px;
+            transition: all 0.3s;
+        }
+        
+        .cta-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px var(--cyber-glow);
+            background: rgba(0, 255, 255, 0.1);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            margin-top: 60px;
+            text-align: center;
+        }
+        
+        .feature {
+            padding: 20px;
+        }
+        
+        .feature-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+        }
+        
+        .feature h4 {
+            font-family: 'Orbitron', sans-serif;
+            margin-bottom: 10px;
+            color: var(--cyber-cyan);
+        }
+        
+        .feature p {
+            color: #8892a8;
+            font-size: 14px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #8892a8;
+            font-size: 14px;
+            border-top: 1px solid var(--cyber-border);
+        }
+        
+        footer a {
+            color: var(--cyber-cyan);
+            text-decoration: none;
+            transition: text-shadow 0.3s;
+        }
+        
+        footer a:hover {
+            text-shadow: 0 0 10px var(--cyber-cyan);
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div id="mapa-hero"></div>
+        <div class="hero-content">
+            <div class="badge">🆓 Curso Gratuito</div>
+            <h1>🗺️ Curso de Leaflet</h1>
+            <p>
+                Aprende a crear mapas interactivos profesionales desde cero. 
+                8 lecciones prácticas con ejemplos reales y código explicado.
+            </p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2 class="section-title">📚 Lecciones del Curso</h2>
+        
+        <div class="lessons-grid">
+            <a href="leccion-01-primer-mapa.html" class="lesson-card">
+                <div class="lesson-number">1</div>
+                <div class="lesson-icon">🗺️</div>
+                <h3>Tu Primer Mapa</h3>
+                <p>Introducción a Leaflet, configuración inicial y creación de tu primer mapa interactivo.</p>
+                <div class="lesson-topics">
+                    <span class="topic-tag">L.map()</span>
+                    <span class="topic-tag">TileLayer</span>
+                    <span class="topic-tag">setView()</span>
+                </div>
+                <div class="difficulty">
+                    <span>Dificultad:</span>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot"></div>
+                    <div class="difficulty-dot"></div>
+                </div>
+            </a>
+            
+            <a href="leccion-02-marcadores-popups.html" class="lesson-card">
+                <div class="lesson-number">2</div>
+                <div class="lesson-icon">📍</div>
+                <h3>Marcadores y Popups</h3>
+                <p>Añade marcadores para señalar ubicaciones y muestra información con popups y tooltips.</p>
+                <div class="lesson-topics">
+                    <span class="topic-tag">L.marker()</span>
+                    <span class="topic-tag">bindPopup()</span>
+                    <span class="topic-tag">bindTooltip()</span>
+                </div>
+                <div class="difficulty">
+                    <span>Dificultad:</span>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot"></div>
+                    <div class="difficulty-dot"></div>
+                </div>
+            </a>
+            
+            <a href="leccion-03-lineas-poligonos.html" class="lesson-card">
+                <div class="lesson-number">3</div>
+                <div class="lesson-icon">📐</div>
+                <h3>Líneas y Polígonos</h3>
+                <p>Dibuja rutas, delimita áreas y crea formas geométricas: líneas, polígonos, círculos.</p>
+                <div class="lesson-topics">
+                    <span class="topic-tag">L.polyline()</span>
+                    <span class="topic-tag">L.polygon()</span>
+                    <span class="topic-tag">L.circle()</span>
+                </div>
+                <div class="difficulty">
+                    <span>Dificultad:</span>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot"></div>
+                </div>
+            </a>
+            
+            <a href="leccion-04-eventos.html" class="lesson-card">
+                <div class="lesson-number">4</div>
+                <div class="lesson-icon">🎯</div>
+                <h3>Eventos del Mapa</h3>
+                <p>Responde a las acciones del usuario: clics, movimientos, zoom y más eventos.</p>
+                <div class="lesson-topics">
+                    <span class="topic-tag">on()</span>
+                    <span class="topic-tag">click</span>
+                    <span class="topic-tag">mousemove</span>
+                </div>
+                <div class="difficulty">
+                    <span>Dificultad:</span>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot"></div>
+                </div>
+            </a>
+            
+            <a href="leccion-05-capas-controles.html" class="lesson-card">
+                <div class="lesson-number">5</div>
+                <div class="lesson-icon">🗂️</div>
+                <h3>Capas y Controles</h3>
+                <p>Organiza elementos en capas, crea grupos y añade controles interactivos.</p>
+                <div class="lesson-topics">
+                    <span class="topic-tag">LayerGroup</span>
+                    <span class="topic-tag">L.control</span>
+                    <span class="topic-tag">Overlays</span>
+                </div>
+                <div class="difficulty">
+                    <span>Dificultad:</span>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot"></div>
+                </div>
+            </a>
+            
+            <a href="leccion-06-geojson.html" class="lesson-card">
+                <div class="lesson-number">6</div>
+                <div class="lesson-icon">📊</div>
+                <h3>GeoJSON</h3>
+                <p>Trabaja con el formato estándar para datos geográficos: carga, estiliza y manipula.</p>
+                <div class="lesson-topics">
+                    <span class="topic-tag">L.geoJSON()</span>
+                    <span class="topic-tag">style</span>
+                    <span class="topic-tag">onEachFeature</span>
+                </div>
+                <div class="difficulty">
+                    <span>Dificultad:</span>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                </div>
+            </a>
+            
+            <a href="leccion-07-iconos-personalizados.html" class="lesson-card">
+                <div class="lesson-number">7</div>
+                <div class="lesson-icon">🎨</div>
+                <h3>Iconos Personalizados</h3>
+                <p>Crea marcadores únicos con imágenes, emojis, HTML/CSS y animaciones.</p>
+                <div class="lesson-topics">
+                    <span class="topic-tag">L.icon()</span>
+                    <span class="topic-tag">L.divIcon()</span>
+                    <span class="topic-tag">CSS Animations</span>
+                </div>
+                <div class="difficulty">
+                    <span>Dificultad:</span>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                </div>
+            </a>
+            
+            <a href="leccion-08-proyecto-final.html" class="lesson-card">
+                <div class="lesson-number">8</div>
+                <div class="lesson-icon">🚀</div>
+                <h3>Proyecto Final</h3>
+                <p>Aplica todo lo aprendido en una guía turística interactiva completa.</p>
+                <div class="lesson-topics">
+                    <span class="topic-tag">App completa</span>
+                    <span class="topic-tag">Filtros</span>
+                    <span class="topic-tag">Búsqueda</span>
+                </div>
+                <div class="difficulty">
+                    <span>Dificultad:</span>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                    <div class="difficulty-dot active"></div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">💻</div>
+                <h4>100% Práctico</h4>
+                <p>Cada lección incluye mapas interactivos funcionales que puedes probar.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📝</div>
+                <h4>Código Explicado</h4>
+                <p>Todo el código está comentado y explicado paso a paso.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎯</div>
+                <h4>Ejemplos Reales</h4>
+                <p>Aprende con datos y ubicaciones reales de Madrid.</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📱</div>
+                <h4>Responsive</h4>
+                <p>Todas las lecciones funcionan en móvil, tablet y escritorio.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="cta-section">
+        <h2>¿Listo para empezar?</h2>
+        <p>Comienza tu viaje en el mundo de los mapas interactivos ahora mismo.</p>
+        <a href="leccion-01-primer-mapa.html" class="cta-btn">🚀 Comenzar Lección 1</a>
+    </div>
+    
+    <footer>
+        <p>
+            Hecho con ❤️ usando <a href="https://leafletjs.com/" target="_blank">Leaflet.js</a> 
+            y datos de <a href="https://www.openstreetmap.org/" target="_blank">OpenStreetMap</a>
+        </p>
+    </footer>
+    
+    <script>
+        // Mapa decorativo del hero
+        const mapaHero = L.map('mapa-hero', {
+            zoomControl: false,
+            dragging: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            attributionControl: false
+        }).setView([40.4168, -3.7038], 12);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(mapaHero);
+        
+        // Añadir algunos marcadores decorativos
+        const ubicaciones = [
+            [40.4138, -3.6921],
+            [40.4180, -3.7142],
+            [40.4168, -3.7038],
+            [40.4200, -3.7057],
+            [40.4153, -3.6845]
+        ];
+        
+        ubicaciones.forEach(coords => {
+            L.circleMarker(coords, {
+                radius: 8,
+                fillColor: '#00ffff',
+                color: '#ff00ff',
+                weight: 2,
+                fillOpacity: 0.9
+            }).addTo(mapaHero);
+        });
+        
+        // Animación suave del mapa
+        setInterval(() => {
+            const currentCenter = mapaHero.getCenter();
+            const newLat = currentCenter.lat + (Math.random() - 0.5) * 0.01;
+            const newLng = currentCenter.lng + (Math.random() - 0.5) * 0.01;
+            mapaHero.panTo([newLat, newLng], { animate: true, duration: 3 });
+        }, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lección 2: Marcadores y Popups</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Rajdhani:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        :root { --cyber-cyan: #00ffff; --cyber-magenta: #ff00ff; --cyber-card: #0d0f1a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0a12 0%, #1a0a2e 50%, #0d0d1a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e8ff;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        .lesson-header {
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.05);
+        }
+        
+        .lesson-number {
+            background: transparent;
+            color: var(--cyber-cyan);
+            padding: 5px 15px;
+            border: 1px solid var(--cyber-cyan);
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
+        h1 { font-family: 'Orbitron', sans-serif; color: var(--cyber-cyan); margin-bottom: 15px; letter-spacing: 2px; }
+        .intro { color: #8892a8; line-height: 1.6; }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            border-radius: 4px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.03);
+        }
+        
+        .card h2 { font-family: 'Orbitron', sans-serif; color: var(--cyber-cyan); margin-bottom: 15px; font-size: 1.2em; }
+        #mapa { height: 400px; border-radius: 4px; border: 1px solid var(--cyber-cyan); box-shadow: 0 0 20px rgba(0, 255, 255, 0.15); }
+        
+        .code-block {
+            background: #0a0a12;
+            color: #d4d4d4;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            margin: 10px 0;
+        }
+        
+        .code-block .comment {
+            color: #6a9955;
+        }
+        
+        .code-block .keyword { color: #00ffff; }
+        .code-block .string { color: #ff00ff; }
+        
+        .code-block .number {
+            color: #b5cea8;
+        }
+        
+        .code-block .function {
+            color: #dcdcaa;
+        }
+        
+        .explanation {
+            background: rgba(0, 255, 255, 0.05);
+            border-left: 4px solid var(--cyber-cyan);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .explanation h3 {
+            color: var(--cyber-cyan);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .explanation ul {
+            margin-left: 20px;
+            color: #8892a8;
+        }
+        
+        .explanation li {
+            margin: 8px 0;
+        }
+        
+        .tip {
+            background: rgba(255, 0, 255, 0.08);
+            border-left: 4px solid var(--cyber-magenta);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .tip strong { color: var(--cyber-magenta); }
+        
+        .interactive-section {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 4px;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        .interactive-section h4 {
+            color: var(--cyber-cyan);
+            margin-bottom: 10px;
+        }
+        
+        .btn {
+            background: transparent;
+            border: 1px solid var(--cyber-cyan);
+            color: var(--cyber-cyan);
+            border-radius: 4px;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: transform 0.3s;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--cyber-cyan);
+            color: var(--cyber-cyan);
+            padding: 12px 25px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lesson-header">
+            <span class="lesson-number">Lección 2 de 8</span>
+            <h1>📍 Marcadores y Popups</h1>
+            <p class="intro">
+                En esta lección aprenderás a añadir marcadores (markers) al mapa para señalar ubicaciones 
+                específicas, y a mostrar información mediante popups y tooltips. Los marcadores son 
+                fundamentales para cualquier aplicación de mapas.
+            </p>
+        </div>
+        
+        <div class="content-grid">
+            <div class="card">
+                <h2>🗺️ Mapa con Marcadores</h2>
+                <div id="mapa"></div>
+                
+                <div class="interactive-section">
+                    <h4>🎮 Prueba interactiva:</h4>
+                    <button class="btn" onclick="agregarMarcador()">Añadir Marcador Aleatorio</button>
+                    <button class="btn" onclick="limpiarMarcadores()">Limpiar Marcadores</button>
+                    <p style="margin-top: 10px; font-size: 13px; color: #666;">
+                        Haz clic en los marcadores para ver sus popups.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>💻 Código: Marcador Básico</h2>
+                
+                <div class="explanation">
+                    <h3>Crear un marcador simple</h3>
+                    <p>Un marcador señala un punto específico en el mapa:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Crear un marcador en coordenadas específicas</span>
+<span class="keyword">const</span> marcador = L.<span class="function">marker</span>([<span class="number">40.4168</span>, <span class="number">-3.7038</span>]);
+
+<span class="comment">// Añadirlo al mapa</span>
+marcador.<span class="function">addTo</span>(mapa);
+                </div>
+                
+                <div class="explanation">
+                    <h3>Añadir un Popup</h3>
+                    <p>Los popups muestran información al hacer clic:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Marcador con popup</span>
+L.<span class="function">marker</span>([<span class="number">40.4168</span>, <span class="number">-3.7038</span>])
+    .<span class="function">addTo</span>(mapa)
+    .<span class="function">bindPopup</span>(<span class="string">'&lt;b&gt;Madrid&lt;/b&gt;&lt;br&gt;Capital de España'</span>)
+    .<span class="function">openPopup</span>(); <span class="comment">// Abre el popup automáticamente</span>
+                </div>
+                
+                <div class="explanation">
+                    <h3>Añadir un Tooltip</h3>
+                    <p>Los tooltips aparecen al pasar el ratón:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Marcador con tooltip</span>
+L.<span class="function">marker</span>([<span class="number">40.4530</span>, <span class="number">-3.6883</span>])
+    .<span class="function">addTo</span>(mapa)
+    .<span class="function">bindTooltip</span>(<span class="string">'Aeropuerto de Barajas'</span>, {
+        permanent: <span class="keyword">false</span>,  <span class="comment">// Solo al pasar ratón</span>
+        direction: <span class="string">'top'</span>   <span class="comment">// Posición del tooltip</span>
+    });
+                </div>
+                
+                <div class="tip">
+                    <strong>💡 Tip:</strong> Puedes usar HTML dentro de los popups para formatear 
+                    el contenido con negritas, imágenes, enlaces, etc.
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-grid" style="margin-top: 20px;">
+            <div class="card">
+                <h2>🔧 Opciones de Popup</h2>
+                
+                <div class="code-block">
+L.<span class="function">marker</span>([<span class="number">40.42</span>, <span class="number">-3.70</span>])
+    .<span class="function">addTo</span>(mapa)
+    .<span class="function">bindPopup</span>(<span class="string">'Contenido del popup'</span>, {
+        maxWidth: <span class="number">300</span>,        <span class="comment">// Ancho máximo en píxeles</span>
+        minWidth: <span class="number">100</span>,        <span class="comment">// Ancho mínimo</span>
+        closeButton: <span class="keyword">true</span>,   <span class="comment">// Mostrar botón cerrar</span>
+        autoClose: <span class="keyword">true</span>,     <span class="comment">// Cerrar al abrir otro</span>
+        closeOnClick: <span class="keyword">true</span>,  <span class="comment">// Cerrar al clic en mapa</span>
+        className: <span class="string">'mi-popup'</span> <span class="comment">// Clase CSS personalizada</span>
+    });
+                </div>
+                
+                <div class="explanation">
+                    <h3>Popup con HTML enriquecido</h3>
+                </div>
+                
+                <div class="code-block">
+<span class="keyword">const</span> contenidoHTML = <span class="string">`
+    &lt;div style="text-align: center;"&gt;
+        &lt;h3&gt;🏛️ Museo del Prado&lt;/h3&gt;
+        &lt;p&gt;Uno de los museos más importantes&lt;/p&gt;
+        &lt;a href="#" target="_blank"&gt;Más info&lt;/a&gt;
+    &lt;/div&gt;
+`</span>;
+
+L.<span class="function">marker</span>([<span class="number">40.4138</span>, <span class="number">-3.6921</span>])
+    .<span class="function">addTo</span>(mapa)
+    .<span class="function">bindPopup</span>(contenidoHTML);
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>📚 Opciones de Marcador</h2>
+                
+                <div class="code-block">
+L.<span class="function">marker</span>([<span class="number">40.42</span>, <span class="number">-3.70</span>], {
+    draggable: <span class="keyword">true</span>,       <span class="comment">// Arrastrable</span>
+    opacity: <span class="number">0.8</span>,          <span class="comment">// Transparencia (0-1)</span>
+    title: <span class="string">'Mi marcador'</span>,  <span class="comment">// Tooltip nativo</span>
+    alt: <span class="string">'Descripción'</span>,    <span class="comment">// Texto alternativo</span>
+    riseOnHover: <span class="keyword">true</span>      <span class="comment">// Elevar al pasar ratón</span>
+}).<span class="function">addTo</span>(mapa);
+                </div>
+                
+                <div class="explanation">
+                    <h3>Métodos útiles del marcador</h3>
+                    <ul>
+                        <li><code>marcador.getLatLng()</code> - Obtener coordenadas</li>
+                        <li><code>marcador.setLatLng([lat, lng])</code> - Mover marcador</li>
+                        <li><code>marcador.remove()</code> - Eliminar del mapa</li>
+                        <li><code>marcador.openPopup()</code> - Abrir popup</li>
+                        <li><code>marcador.closePopup()</code> - Cerrar popup</li>
+                        <li><code>marcador.setOpacity(0.5)</code> - Cambiar opacidad</li>
+                    </ul>
+                </div>
+                
+                <div class="tip">
+                    <strong>💡 Tip:</strong> Los marcadores arrastrables (draggable: true) son útiles 
+                    para permitir que el usuario seleccione una ubicación en el mapa.
+                </div>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="leccion-01-primer-mapa.html" class="nav-btn">← Anterior</a>
+            <a href="leccion-03-lineas-poligonos.html" class="nav-btn">Siguiente: Líneas y Polígonos →</a>
+        </div>
+    </div>
+    
+    <script>
+        // Crear mapa centrado en Madrid
+        const mapa = L.map('mapa').setView([40.4168, -3.7038], 13);
+        
+        // Añadir capa de tiles
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(mapa);
+        
+        // Array para guardar marcadores adicionales
+        let marcadoresExtra = [];
+        
+        // Marcador principal con popup
+        const marcadorMadrid = L.marker([40.4168, -3.7038])
+            .addTo(mapa)
+            .bindPopup('<b>Madrid</b><br>Capital de España<br>Población: ~3.3 millones')
+            .openPopup();
+        
+        // Marcador del Museo del Prado con HTML enriquecido
+        const contenidoPrado = `
+            <div style="text-align: center;">
+                <h3 style="margin: 0 0 5px 0; color: #11998e;">🏛️ Museo del Prado</h3>
+                <p style="margin: 5px 0;">Uno de los museos de arte más importantes del mundo</p>
+                <small>Fundado en 1819</small>
+            </div>
+        `;
+        
+        L.marker([40.4138, -3.6921])
+            .addTo(mapa)
+            .bindPopup(contenidoPrado);
+        
+        // Marcador con tooltip
+        L.marker([40.4530, -3.6883])
+            .addTo(mapa)
+            .bindTooltip('✈️ Aeropuerto de Barajas', {
+                permanent: false,
+                direction: 'top'
+            })
+            .bindPopup('<b>Aeropuerto Adolfo Suárez</b><br>Madrid-Barajas');
+        
+        // Marcador arrastrable
+        const marcadorDraggable = L.marker([40.4250, -3.7100], {
+            draggable: true,
+            title: 'Arrástrame!'
+        }).addTo(mapa)
+          .bindPopup('¡Soy arrastrable! Muéveme por el mapa.')
+          .bindTooltip('Arrástrame', { permanent: true, direction: 'right' });
+        
+        // Evento cuando se suelta el marcador arrastrable
+        marcadorDraggable.on('dragend', function(e) {
+            const pos = e.target.getLatLng();
+            e.target.getPopup().setContent(
+                `<b>Nueva posición:</b><br>Lat: ${pos.lat.toFixed(4)}<br>Lng: ${pos.lng.toFixed(4)}`
+            );
+            e.target.openPopup();
+        });
+        
+        // Función para añadir marcador aleatorio
+        function agregarMarcador() {
+            const lat = 40.4 + (Math.random() - 0.5) * 0.1;
+            const lng = -3.7 + (Math.random() - 0.5) * 0.1;
+            
+            const nuevoMarcador = L.marker([lat, lng])
+                .addTo(mapa)
+                .bindPopup(`Marcador en:<br>Lat: ${lat.toFixed(4)}<br>Lng: ${lng.toFixed(4)}`);
+            
+            marcadoresExtra.push(nuevoMarcador);
+        }
+        
+        // Función para limpiar marcadores extras
+        function limpiarMarcadores() {
+            marcadoresExtra.forEach(m => m.remove());
+            marcadoresExtra = [];
+        }
+    </script>
+</body>
+</html>

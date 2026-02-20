@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lección 7: Iconos Personalizados</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Rajdhani:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        :root { --cyber-cyan: #00ffff; --cyber-magenta: #ff00ff; --cyber-card: #0d0f1a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0a12 0%, #1a0a2e 50%, #0d0d1a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e8ff;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .lesson-header {
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.05);
+        }
+        
+        .lesson-number {
+            background: transparent;
+            color: var(--cyber-cyan);
+            padding: 5px 15px;
+            border: 1px solid var(--cyber-cyan);
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
+        h1 { font-family: 'Orbitron', sans-serif; color: var(--cyber-cyan); margin-bottom: 15px; letter-spacing: 2px; }
+        .intro { color: #8892a8; line-height: 1.6; }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            border-radius: 4px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.03);
+        }
+        
+        .card h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--cyber-cyan);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        #mapa {
+            height: 450px;
+            border-radius: 4px;
+            border: 1px solid var(--cyber-cyan);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+        }
+        
+        .code-block {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 11px;
+            line-height: 1.4;
+            margin: 10px 0;
+        }
+        
+        .code-block .comment {
+            color: #6a9955;
+        }
+        
+        .code-block .keyword { color: #00ffff; }
+        .code-block .string { color: #ff00ff; }
+        
+        .code-block .number {
+            color: #b5cea8;
+        }
+        
+        .code-block .function {
+            color: #dcdcaa;
+        }
+        
+        .explanation {
+            background: rgba(0, 255, 255, 0.05);
+            border-left: 4px solid var(--cyber-cyan);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .explanation h3 {
+            color: var(--cyber-cyan);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .explanation ul {
+            margin-left: 20px;
+            color: #555;
+        }
+        
+        .explanation li {
+            margin: 5px 0;
+        }
+        
+        .tip {
+            background: rgba(255, 0, 255, 0.08);
+            border-left: 4px solid var(--cyber-magenta);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .tip strong { color: var(--cyber-magenta); }
+        
+        .icon-showcase {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+        
+        .icon-demo {
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .icon-demo span {
+            font-size: 12px;
+            color: #666;
+            display: block;
+            margin-top: 5px;
+        }
+        
+        .emoji-icon {
+            font-size: 32px;
+        }
+        
+        .div-icon-demo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            margin: 0 auto;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--cyber-cyan);
+            color: var(--cyber-cyan);
+            padding: 12px 25px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+        
+        /* Estilos para iconos personalizados en el mapa */
+        .custom-div-icon {
+            background: none;
+            border: none;
+        }
+        
+        .marker-pin {
+            width: 30px;
+            height: 30px;
+            border-radius: 50% 50% 50% 0;
+            background: #e74c3c;
+            position: absolute;
+            transform: rotate(-45deg);
+            left: 50%;
+            top: 50%;
+            margin: -15px 0 0 -15px;
+        }
+        
+        .marker-pin::after {
+            content: '';
+            width: 18px;
+            height: 18px;
+            margin: 6px 0 0 6px;
+            background: white;
+            position: absolute;
+            border-radius: 50%;
+        }
+        
+        .emoji-marker {
+            font-size: 28px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .numbered-marker {
+            width: 35px;
+            height: 35px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .pulse-marker {
+            width: 20px;
+            height: 20px;
+            background: #e74c3c;
+            border-radius: 50%;
+            position: relative;
+        }
+        
+        .pulse-marker::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #e74c3c;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lesson-header">
+            <span class="lesson-number">Lección 7 de 8</span>
+            <h1>🎨 Iconos Personalizados</h1>
+            <p class="intro">
+                Los iconos predeterminados están bien, pero los iconos personalizados hacen que 
+                tu mapa sea único y profesional. Aprenderás a usar imágenes, emojis, HTML/CSS 
+                y crear iconos animados.
+            </p>
+        </div>
+        
+        <div class="content-grid">
+            <div class="card">
+                <h2>🗺️ Diferentes Tipos de Iconos</h2>
+                <div id="mapa"></div>
+                
+                <div class="icon-showcase">
+                    <div class="icon-demo">
+                        <div class="emoji-icon">📍</div>
+                        <span>Emoji</span>
+                    </div>
+                    <div class="icon-demo">
+                        <div class="div-icon-demo">1</div>
+                        <span>Numerado</span>
+                    </div>
+                    <div class="icon-demo">
+                        <div class="emoji-icon">🏨</div>
+                        <span>Categoría</span>
+                    </div>
+                    <div class="icon-demo">
+                        <div class="emoji-icon">🍽️</div>
+                        <span>Restaurante</span>
+                    </div>
+                    <div class="icon-demo">
+                        <div style="width: 20px; height: 20px; background: #e74c3c; border-radius: 50%; margin: 0 auto;"></div>
+                        <span>Pulsante</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>🖼️ L.Icon - Icono con imagen</h2>
+                
+                <div class="explanation">
+                    <h3>Crear icono desde imagen</h3>
+                    <p>Usa tus propias imágenes PNG/SVG como marcadores:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Crear icono personalizado</span>
+<span class="keyword">const</span> miIcono = L.<span class="function">icon</span>({
+    iconUrl: <span class="string">'imagenes/mi-marcador.png'</span>,
+    iconSize: [<span class="number">32</span>, <span class="number">32</span>],     <span class="comment">// Tamaño del icono [ancho, alto]</span>
+    iconAnchor: [<span class="number">16</span>, <span class="number">32</span>],   <span class="comment">// Punto de anclaje (centro-abajo)</span>
+    popupAnchor: [<span class="number">0</span>, <span class="number">-32</span>],   <span class="comment">// Dónde aparece el popup</span>
+    shadowUrl: <span class="string">'imagenes/sombra.png'</span>,
+    shadowSize: [<span class="number">41</span>, <span class="number">41</span>],
+    shadowAnchor: [<span class="number">12</span>, <span class="number">41</span>]
+});
+
+<span class="comment">// Usar el icono en un marcador</span>
+L.<span class="function">marker</span>([<span class="number">40.4168</span>, <span class="number">-3.7038</span>], {
+    icon: miIcono
+}).<span class="function">addTo</span>(mapa);
+                </div>
+                
+                <div class="tip">
+                    <strong>💡 iconAnchor:</strong> Define qué punto del icono se coloca en las 
+                    coordenadas. [16, 32] = centro horizontal, abajo vertical (para un pin).
+                </div>
+                
+                <div class="explanation">
+                    <h3>Crear clase de icono reutilizable</h3>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Extender Icon para crear una clase</span>
+<span class="keyword">const</span> IconoCategoria = L.Icon.<span class="function">extend</span>({
+    options: {
+        iconSize: [<span class="number">32</span>, <span class="number">32</span>],
+        iconAnchor: [<span class="number">16</span>, <span class="number">32</span>],
+        popupAnchor: [<span class="number">0</span>, <span class="number">-32</span>]
+    }
+});
+
+<span class="comment">// Crear instancias con diferentes imágenes</span>
+<span class="keyword">const</span> iconoHotel = <span class="keyword">new</span> IconoCategoria({iconUrl: <span class="string">'hotel.png'</span>});
+<span class="keyword">const</span> iconoRestaurante = <span class="keyword">new</span> IconoCategoria({iconUrl: <span class="string">'resto.png'</span>});
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-grid" style="margin-top: 20px;">
+            <div class="card">
+                <h2>📝 L.DivIcon - Icono HTML/CSS</h2>
+                
+                <div class="explanation">
+                    <h3>Iconos con HTML puro</h3>
+                    <p>Crea iconos dinámicos sin necesidad de imágenes:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Icono con emoji</span>
+<span class="keyword">const</span> iconoEmoji = L.<span class="function">divIcon</span>({
+    html: <span class="string">'&lt;div class="emoji-marker"&gt;📍&lt;/div&gt;'</span>,
+    className: <span class="string">'custom-div-icon'</span>,
+    iconSize: [<span class="number">30</span>, <span class="number">30</span>],
+    iconAnchor: [<span class="number">15</span>, <span class="number">30</span>]
+});
+
+L.<span class="function">marker</span>([<span class="number">40.42</span>, <span class="number">-3.71</span>], {icon: iconoEmoji}).<span class="function">addTo</span>(mapa);
+                </div>
+                
+                <div class="explanation">
+                    <h3>Icono numerado dinámico</h3>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Función para crear iconos numerados</span>
+<span class="keyword">function</span> <span class="function">iconoNumerado</span>(numero, color) {
+    <span class="keyword">return</span> L.<span class="function">divIcon</span>({
+        html: <span class="string">`
+            &lt;div style="
+                width: 30px;
+                height: 30px;
+                background: ${color};
+                border-radius: 50%;
+                border: 2px solid white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-weight: bold;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            "&gt;${numero}&lt;/div&gt;
+        `</span>,
+        className: <span class="string">''</span>,
+        iconSize: [<span class="number">30</span>, <span class="number">30</span>],
+        iconAnchor: [<span class="number">15</span>, <span class="number">15</span>]
+    });
+}
+
+<span class="comment">// Crear marcadores numerados</span>
+L.<span class="function">marker</span>([<span class="number">40.42</span>, <span class="number">-3.71</span>], {icon: iconoNumerado(<span class="number">1</span>, <span class="string">'#e74c3c'</span>)});
+L.<span class="function">marker</span>([<span class="number">40.41</span>, <span class="number">-3.70</span>], {icon: iconoNumerado(<span class="number">2</span>, <span class="string">'#3498db'</span>)});
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>✨ Iconos Animados</h2>
+                
+                <div class="explanation">
+                    <h3>Efecto de pulso con CSS</h3>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">/* CSS para animación de pulso */</span>
+.pulse-marker {
+    width: 20px;
+    height: 20px;
+    background: #e74c3c;
+    border-radius: 50%;
+    position: relative;
+}
+
+.pulse-marker::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #e74c3c;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(3); opacity: 0; }
+}
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Crear icono pulsante</span>
+<span class="keyword">const</span> iconoPulso = L.<span class="function">divIcon</span>({
+    html: <span class="string">'&lt;div class="pulse-marker"&gt;&lt;/div&gt;'</span>,
+    className: <span class="string">''</span>,
+    iconSize: [<span class="number">20</span>, <span class="number">20</span>],
+    iconAnchor: [<span class="number">10</span>, <span class="number">10</span>]
+});
+
+L.<span class="function">marker</span>([<span class="number">40.42</span>, <span class="number">-3.70</span>], {icon: iconoPulso}).<span class="function">addTo</span>(mapa);
+                </div>
+                
+                <div class="explanation">
+                    <h3>Icono con rebote</h3>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">/* CSS para rebote */</span>
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.bounce-marker {
+    animation: bounce 1s infinite;
+}
+                </div>
+                
+                <div class="tip">
+                    <strong>💡 Tip:</strong> Usa animaciones CSS con moderación para no 
+                    sobrecargar el mapa, especialmente con muchos marcadores.
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 20px;">
+            <h2>🎯 Ejemplo Completo: Iconos por Categoría</h2>
+            
+            <div class="code-block">
+<span class="comment">// Definir iconos por categoría</span>
+<span class="keyword">const</span> iconos = {
+    restaurante: L.<span class="function">divIcon</span>({
+        html: <span class="string">'&lt;div class="emoji-marker"&gt;🍽️&lt;/div&gt;'</span>,
+        className: <span class="string">''</span>, iconSize: [<span class="number">30</span>, <span class="number">30</span>], iconAnchor: [<span class="number">15</span>, <span class="number">15</span>]
+    }),
+    hotel: L.<span class="function">divIcon</span>({
+        html: <span class="string">'&lt;div class="emoji-marker"&gt;🏨&lt;/div&gt;'</span>,
+        className: <span class="string">''</span>, iconSize: [<span class="number">30</span>, <span class="number">30</span>], iconAnchor: [<span class="number">15</span>, <span class="number">15</span>]
+    }),
+    museo: L.<span class="function">divIcon</span>({
+        html: <span class="string">'&lt;div class="emoji-marker"&gt;🏛️&lt;/div&gt;'</span>,
+        className: <span class="string">''</span>, iconSize: [<span class="number">30</span>, <span class="number">30</span>], iconAnchor: [<span class="number">15</span>, <span class="number">15</span>]
+    }),
+    transporte: L.<span class="function">divIcon</span>({
+        html: <span class="string">'&lt;div class="emoji-marker"&gt;🚇&lt;/div&gt;'</span>,
+        className: <span class="string">''</span>, iconSize: [<span class="number">30</span>, <span class="number">30</span>], iconAnchor: [<span class="number">15</span>, <span class="number">15</span>]
+    })
+};
+
+<span class="comment">// Datos de lugares</span>
+<span class="keyword">const</span> lugares = [
+    { lat: <span class="number">40.42</span>, lng: <span class="number">-3.71</span>, nombre: <span class="string">'Casa Botín'</span>, categoria: <span class="string">'restaurante'</span> },
+    { lat: <span class="number">40.41</span>, lng: <span class="number">-3.69</span>, nombre: <span class="string">'Hotel Ritz'</span>, categoria: <span class="string">'hotel'</span> },
+    { lat: <span class="number">40.414</span>, lng: <span class="number">-3.692</span>, nombre: <span class="string">'Museo del Prado'</span>, categoria: <span class="string">'museo'</span> }
+];
+
+<span class="comment">// Crear marcadores con iconos según categoría</span>
+lugares.<span class="function">forEach</span>(lugar => {
+    L.<span class="function">marker</span>([lugar.lat, lugar.lng], {
+        icon: iconos[lugar.categoria]
+    })
+    .<span class="function">bindPopup</span>(<span class="string">`&lt;b&gt;${lugar.nombre}&lt;/b&gt;&lt;br&gt;${lugar.categoria}`</span>)
+    .<span class="function">addTo</span>(mapa);
+});
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="leccion-06-geojson.html" class="nav-btn">← Anterior</a>
+            <a href="leccion-08-proyecto-final.html" class="nav-btn">Siguiente: Proyecto Final →</a>
+        </div>
+    </div>
+    
+    <script>
+        // Crear mapa
+        const mapa = L.map('mapa').setView([40.4168, -3.7038], 14);
+        
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CartoDB'
+        }).addTo(mapa);
+        
+        // 1. Icono con emoji simple
+        const iconoEmoji = L.divIcon({
+            html: '<div style="font-size: 28px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">📍</div>',
+            className: '',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30]
+        });
+        
+        L.marker([40.4168, -3.7038], { icon: iconoEmoji })
+            .addTo(mapa)
+            .bindPopup('<b>Icono Emoji</b><br>Simple y efectivo');
+        
+        // 2. Función para iconos numerados
+        function iconoNumerado(numero, color = '#667eea') {
+            return L.divIcon({
+                html: `
+                    <div style="
+                        width: 35px;
+                        height: 35px;
+                        background: linear-gradient(135deg, ${color} 0%, ${color}dd 100%);
+                        border-radius: 50%;
+                        border: 3px solid white;
+                        box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: white;
+                        font-weight: bold;
+                        font-size: 14px;
+                    ">${numero}</div>
+                `,
+                className: '',
+                iconSize: [35, 35],
+                iconAnchor: [17, 17]
+            });
+        }
+        
+        // Crear ruta numerada
+        const ruta = [
+            { lat: 40.4200, lng: -3.7100, nombre: 'Inicio - Plaza Mayor' },
+            { lat: 40.4180, lng: -3.7050, nombre: 'Puerta del Sol' },
+            { lat: 40.4150, lng: -3.6950, nombre: 'Fuente de Cibeles' },
+            { lat: 40.4138, lng: -3.6921, nombre: 'Final - Museo del Prado' }
+        ];
+        
+        ruta.forEach((punto, index) => {
+            L.marker([punto.lat, punto.lng], { icon: iconoNumerado(index + 1) })
+                .addTo(mapa)
+                .bindPopup(`<b>Parada ${index + 1}</b><br>${punto.nombre}`);
+        });
+        
+        // Línea conectando la ruta
+        L.polyline(ruta.map(p => [p.lat, p.lng]), {
+            color: '#667eea',
+            weight: 3,
+            dashArray: '10, 5',
+            opacity: 0.7
+        }).addTo(mapa);
+        
+        // 3. Iconos de categorías con emojis
+        const categorias = {
+            restaurante: { emoji: '🍽️', color: '#e74c3c' },
+            hotel: { emoji: '🏨', color: '#3498db' },
+            museo: { emoji: '🏛️', color: '#9b59b6' },
+            metro: { emoji: '🚇', color: '#2ecc71' }
+        };
+        
+        function iconoCategoria(tipo) {
+            const cat = categorias[tipo];
+            return L.divIcon({
+                html: `<div style="
+                    font-size: 24px;
+                    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                    background: white;
+                    border-radius: 50%;
+                    width: 36px;
+                    height: 36px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border: 2px solid ${cat.color};
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                ">${cat.emoji}</div>`,
+                className: '',
+                iconSize: [36, 36],
+                iconAnchor: [18, 18]
+            });
+        }
+        
+        // Lugares de ejemplo
+        const lugares = [
+            { lat: 40.4220, lng: -3.7150, nombre: 'Sobrino de Botín', tipo: 'restaurante' },
+            { lat: 40.4190, lng: -3.6940, nombre: 'Hotel Palace', tipo: 'hotel' },
+            { lat: 40.4100, lng: -3.6950, nombre: 'Museo Thyssen', tipo: 'museo' },
+            { lat: 40.4200, lng: -3.7055, nombre: 'Metro Gran Vía', tipo: 'metro' }
+        ];
+        
+        lugares.forEach(lugar => {
+            L.marker([lugar.lat, lugar.lng], { icon: iconoCategoria(lugar.tipo) })
+                .addTo(mapa)
+                .bindPopup(`<b>${lugar.nombre}</b><br>Categoría: ${lugar.tipo}`);
+        });
+        
+        // 4. Icono con animación de pulso
+        const iconoPulso = L.divIcon({
+            html: `
+                <div style="position: relative;">
+                    <div style="
+                        width: 16px;
+                        height: 16px;
+                        background: #e74c3c;
+                        border-radius: 50%;
+                        border: 2px solid white;
+                        position: relative;
+                        z-index: 2;
+                    "></div>
+                    <div style="
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 16px;
+                        height: 16px;
+                        background: #e74c3c;
+                        border-radius: 50%;
+                        animation: pulseAnim 2s infinite;
+                        z-index: 1;
+                    "></div>
+                </div>
+                <style>
+                    @keyframes pulseAnim {
+                        0% { transform: scale(1); opacity: 1; }
+                        100% { transform: scale(3); opacity: 0; }
+                    }
+                </style>
+            `,
+            className: '',
+            iconSize: [20, 20],
+            iconAnchor: [10, 10]
+        });
+        
+        L.marker([40.4250, lng = -3.7000], { icon: iconoPulso })
+            .addTo(mapa)
+            .bindPopup('<b>Ubicación en vivo</b><br>Efecto de pulso animado');
+        
+        // 5. Icono con pin personalizado CSS
+        const iconoPin = L.divIcon({
+            html: `
+                <div style="
+                    width: 30px;
+                    height: 30px;
+                    background: #9b59b6;
+                    border-radius: 50% 50% 50% 0;
+                    transform: rotate(-45deg);
+                    border: 2px solid white;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                    position: relative;
+                ">
+                    <div style="
+                        width: 14px;
+                        height: 14px;
+                        background: white;
+                        border-radius: 50%;
+                        position: absolute;
+                        top: 6px;
+                        left: 6px;
+                    "></div>
+                </div>
+            `,
+            className: '',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30]
+        });
+        
+        L.marker([40.4080, lng = -3.7100], { icon: iconoPin })
+            .addTo(mapa)
+            .bindPopup('<b>Pin CSS Personalizado</b><br>Sin necesidad de imágenes');
+    </script>
+</body>
+</html>

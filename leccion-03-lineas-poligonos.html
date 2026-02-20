@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lección 3: Líneas y Polígonos</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Rajdhani:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        :root { --cyber-cyan: #00ffff; --cyber-magenta: #ff00ff; --cyber-card: #0d0f1a; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0a12 0%, #1a0a2e 50%, #0d0d1a 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #e0e8ff;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+            pointer-events: none;
+            z-index: 9999;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        .lesson-header {
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.05);
+        }
+        
+        .lesson-number {
+            background: transparent;
+            color: var(--cyber-cyan);
+            padding: 5px 15px;
+            border: 1px solid var(--cyber-cyan);
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 12px;
+            letter-spacing: 2px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        
+        h1 { font-family: 'Orbitron', sans-serif; color: var(--cyber-cyan); margin-bottom: 15px; letter-spacing: 2px; }
+        .intro { color: #8892a8; line-height: 1.6; }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.15);
+            border-radius: 4px;
+            padding: 25px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.03);
+        }
+        
+        .card h2 { font-family: 'Orbitron', sans-serif; color: var(--cyber-cyan); margin-bottom: 15px; font-size: 1.2em; }
+        #mapa { height: 450px; border-radius: 4px; border: 1px solid var(--cyber-cyan); box-shadow: 0 0 20px rgba(0, 255, 255, 0.15); }
+        
+        .code-block {
+            background: #0a0a12;
+            color: #d4d4d4;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            margin: 10px 0;
+        }
+        
+        .code-block .comment {
+            color: #6a9955;
+        }
+        
+        .code-block .keyword { color: #00ffff; }
+        .code-block .string { color: #ff00ff; }
+        
+        .code-block .number {
+            color: #b5cea8;
+        }
+        
+        .code-block .function {
+            color: #dcdcaa;
+        }
+        
+        .explanation {
+            background: rgba(0, 255, 255, 0.05);
+            border-left: 4px solid var(--cyber-cyan);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .explanation h3 {
+            color: var(--cyber-cyan);
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .explanation ul {
+            margin-left: 20px;
+            color: #8892a8;
+        }
+        
+        .explanation li {
+            margin: 5px 0;
+        }
+        
+        .tip {
+            background: rgba(255, 0, 255, 0.08);
+            border-left: 4px solid var(--cyber-magenta);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 10px 10px 0;
+        }
+        
+        .tip strong { color: var(--cyber-magenta); }
+        
+        .shape-demo {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            background: transparent;
+            border: 1px solid var(--cyber-cyan);
+            color: var(--cyber-cyan);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: transform 0.3s;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .btn.active {
+            box-shadow: 0 0 0 3px rgba(238, 9, 121, 0.3);
+        }
+        
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        .nav-btn {
+            background: transparent;
+            border: 1px solid var(--cyber-cyan);
+            color: var(--cyber-cyan);
+            padding: 12px 25px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            letter-spacing: 2px;
+            transition: all 0.3s;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        }
+        
+        .legend {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 13px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="lesson-header">
+            <span class="lesson-number">Lección 3 de 8</span>
+            <h1>📐 Líneas y Polígonos</h1>
+            <p class="intro">
+                Aprende a dibujar formas geométricas en el mapa: líneas (polylines), polígonos, 
+                rectángulos y círculos. Estas formas son esenciales para mostrar rutas, delimitar 
+                áreas, zonas de cobertura y mucho más.
+            </p>
+        </div>
+        
+        <div class="content-grid">
+            <div class="card">
+                <h2>🗺️ Formas Geométricas</h2>
+                <div id="mapa"></div>
+                
+                <div class="shape-demo">
+                    <button class="btn" onclick="toggleForma('polyline')">Línea</button>
+                    <button class="btn" onclick="toggleForma('polygon')">Polígono</button>
+                    <button class="btn" onclick="toggleForma('rectangle')">Rectángulo</button>
+                    <button class="btn" onclick="toggleForma('circle')">Círculo</button>
+                    <button class="btn" onclick="mostrarTodas()">Mostrar Todas</button>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #e74c3c;"></div>
+                        <span>Línea (Ruta turística)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #3498db;"></div>
+                        <span>Polígono (Zona centro)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #2ecc71;"></div>
+                        <span>Rectángulo (Parque)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #9b59b6; border-radius: 50%;"></div>
+                        <span>Círculo (Radio de cobertura)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>📏 Polyline (Líneas)</h2>
+                
+                <div class="explanation">
+                    <h3>Crear una línea</h3>
+                    <p>Una polyline conecta múltiples puntos formando una línea:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Array de coordenadas [lat, lng]</span>
+<span class="keyword">const</span> puntos = [
+    [<span class="number">40.4168</span>, <span class="number">-3.7038</span>],  <span class="comment">// Punto 1</span>
+    [<span class="number">40.4200</span>, <span class="number">-3.7100</span>],  <span class="comment">// Punto 2</span>
+    [<span class="number">40.4250</span>, <span class="number">-3.6950</span>]   <span class="comment">// Punto 3</span>
+];
+
+<span class="comment">// Crear la línea</span>
+<span class="keyword">const</span> linea = L.<span class="function">polyline</span>(puntos, {
+    color: <span class="string">'red'</span>,        <span class="comment">// Color de la línea</span>
+    weight: <span class="number">4</span>,            <span class="comment">// Grosor en píxeles</span>
+    opacity: <span class="number">0.8</span>,         <span class="comment">// Transparencia (0-1)</span>
+    dashArray: <span class="string">'10, 10'</span>, <span class="comment">// Línea discontinua</span>
+    lineCap: <span class="string">'round'</span>,    <span class="comment">// Extremos redondeados</span>
+    lineJoin: <span class="string">'round'</span>    <span class="comment">// Uniones redondeadas</span>
+}).<span class="function">addTo</span>(mapa);
+
+<span class="comment">// Ajustar vista a la línea</span>
+mapa.<span class="function">fitBounds</span>(linea.<span class="function">getBounds</span>());
+                </div>
+                
+                <div class="tip">
+                    <strong>💡 Tip:</strong> Usa <code>fitBounds()</code> para ajustar automáticamente 
+                    el zoom del mapa y mostrar toda la forma.
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-grid" style="margin-top: 20px;">
+            <div class="card">
+                <h2>🔷 Polygon (Polígono)</h2>
+                
+                <div class="explanation">
+                    <h3>Crear un polígono</h3>
+                    <p>Un polígono es una forma cerrada con relleno:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="keyword">const</span> coordenadas = [
+    [<span class="number">40.4200</span>, <span class="number">-3.7100</span>],
+    [<span class="number">40.4150</span>, <span class="number">-3.7150</span>],
+    [<span class="number">40.4100</span>, <span class="number">-3.7050</span>],
+    [<span class="number">40.4150</span>, <span class="number">-3.6950</span>]
+];
+
+<span class="keyword">const</span> poligono = L.<span class="function">polygon</span>(coordenadas, {
+    color: <span class="string">'blue'</span>,       <span class="comment">// Color del borde</span>
+    weight: <span class="number">3</span>,            <span class="comment">// Grosor del borde</span>
+    fillColor: <span class="string">'#3498db'</span>,<span class="comment">// Color de relleno</span>
+    fillOpacity: <span class="number">0.4</span>     <span class="comment">// Transparencia relleno</span>
+}).<span class="function">addTo</span>(mapa);
+
+<span class="comment">// Añadir popup al polígono</span>
+poligono.<span class="function">bindPopup</span>(<span class="string">'Zona centro de Madrid'</span>);
+                </div>
+                
+                <div class="explanation">
+                    <h3>Polígono con agujero</h3>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Polígono exterior y agujero interior</span>
+<span class="keyword">const</span> conAgujero = [
+    [ <span class="comment">// Contorno exterior</span>
+        [<span class="number">40.43</span>, <span class="number">-3.72</span>], [<span class="number">40.43</span>, <span class="number">-3.68</span>],
+        [<span class="number">40.40</span>, <span class="number">-3.68</span>], [<span class="number">40.40</span>, <span class="number">-3.72</span>]
+    ],
+    [ <span class="comment">// Agujero interior</span>
+        [<span class="number">40.42</span>, <span class="number">-3.71</span>], [<span class="number">40.42</span>, <span class="number">-3.69</span>],
+        [<span class="number">40.41</span>, <span class="number">-3.69</span>], [<span class="number">40.41</span>, <span class="number">-3.71</span>]
+    ]
+];
+
+L.<span class="function">polygon</span>(conAgujero).<span class="function">addTo</span>(mapa);
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>⬜ Rectángulo y ⭕ Círculo</h2>
+                
+                <div class="explanation">
+                    <h3>Crear un rectángulo</h3>
+                    <p>Se define con dos esquinas opuestas:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="comment">// Esquinas del rectángulo</span>
+<span class="keyword">const</span> esquinas = [
+    [<span class="number">40.4250</span>, <span class="number">-3.6800</span>], <span class="comment">// Esquina superior-izq</span>
+    [<span class="number">40.4150</span>, <span class="number">-3.6650</span>]  <span class="comment">// Esquina inferior-der</span>
+];
+
+<span class="keyword">const</span> rectangulo = L.<span class="function">rectangle</span>(esquinas, {
+    color: <span class="string">'#2ecc71'</span>,
+    weight: <span class="number">2</span>,
+    fillColor: <span class="string">'#2ecc71'</span>,
+    fillOpacity: <span class="number">0.3</span>
+}).<span class="function">addTo</span>(mapa);
+                </div>
+                
+                <div class="explanation">
+                    <h3>Crear un círculo</h3>
+                    <p>Se define con centro y radio en metros:</p>
+                </div>
+                
+                <div class="code-block">
+<span class="keyword">const</span> circulo = L.<span class="function">circle</span>(
+    [<span class="number">40.4300</span>, <span class="number">-3.7038</span>], <span class="comment">// Centro</span>
+    {
+        radius: <span class="number">500</span>,         <span class="comment">// Radio en METROS</span>
+        color: <span class="string">'#9b59b6'</span>,
+        fillColor: <span class="string">'#9b59b6'</span>,
+        fillOpacity: <span class="number">0.3</span>
+    }
+).<span class="function">addTo</span>(mapa);
+
+<span class="comment">// CircleMarker: radio en PÍXELES (no cambia con zoom)</span>
+L.<span class="function">circleMarker</span>([<span class="number">40.41</span>, <span class="number">-3.68</span>], {
+    radius: <span class="number">10</span> <span class="comment">// 10 píxeles</span>
+}).<span class="function">addTo</span>(mapa);
+                </div>
+                
+                <div class="tip">
+                    <strong>💡 Diferencia:</strong> <code>L.circle()</code> usa metros (escala con zoom), 
+                    mientras que <code>L.circleMarker()</code> usa píxeles (tamaño fijo en pantalla).
+                </div>
+            </div>
+        </div>
+        
+        <div class="card" style="margin-top: 20px;">
+            <h2>🎨 Opciones de Estilo Comunes</h2>
+            <div class="explanation">
+                <h3>Propiedades disponibles para todas las formas:</h3>
+                <ul>
+                    <li><strong>stroke:</strong> true/false - Mostrar borde</li>
+                    <li><strong>color:</strong> Color del borde (hex, nombre, rgb)</li>
+                    <li><strong>weight:</strong> Grosor del borde en píxeles</li>
+                    <li><strong>opacity:</strong> Transparencia del borde (0-1)</li>
+                    <li><strong>fill:</strong> true/false - Mostrar relleno</li>
+                    <li><strong>fillColor:</strong> Color del relleno</li>
+                    <li><strong>fillOpacity:</strong> Transparencia del relleno (0-1)</li>
+                    <li><strong>dashArray:</strong> Patrón de línea discontinua (ej: '5, 10')</li>
+                    <li><strong>className:</strong> Clase CSS personalizada</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="nav-buttons">
+            <a href="leccion-02-marcadores-popups.html" class="nav-btn">← Anterior</a>
+            <a href="leccion-04-eventos.html" class="nav-btn">Siguiente: Eventos →</a>
+        </div>
+    </div>
+    
+    <script>
+        // Crear mapa
+        const mapa = L.map('mapa').setView([40.4200, -3.7000], 13);
+        
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(mapa);
+        
+        // Crear las formas
+        const puntosRuta = [
+            [40.4168, -3.7038],
+            [40.4138, -3.6921],
+            [40.4200, -3.6850],
+            [40.4280, -3.6920]
+        ];
+        
+        const polyline = L.polyline(puntosRuta, {
+            color: '#e74c3c',
+            weight: 5,
+            opacity: 0.8,
+            dashArray: '10, 5'
+        }).bindPopup('<b>Ruta turística</b><br>Del centro al Retiro');
+        
+        const coordsPoligono = [
+            [40.4200, -3.7100],
+            [40.4150, -3.7150],
+            [40.4100, -3.7080],
+            [40.4100, -3.7000],
+            [40.4150, -3.6950],
+            [40.4200, -3.6980]
+        ];
+        
+        const polygon = L.polygon(coordsPoligono, {
+            color: '#3498db',
+            weight: 3,
+            fillColor: '#3498db',
+            fillOpacity: 0.3
+        }).bindPopup('<b>Zona Centro</b><br>Área histórica de Madrid');
+        
+        const rectangle = L.rectangle([
+            [40.4250, -3.6850],
+            [40.4180, -3.6700]
+        ], {
+            color: '#2ecc71',
+            weight: 3,
+            fillColor: '#2ecc71',
+            fillOpacity: 0.3
+        }).bindPopup('<b>Parque del Retiro</b><br>118 hectáreas de naturaleza');
+        
+        const circle = L.circle([40.4350, -3.7038], {
+            radius: 400,
+            color: '#9b59b6',
+            fillColor: '#9b59b6',
+            fillOpacity: 0.3
+        }).bindPopup('<b>Zona de cobertura</b><br>Radio: 400 metros');
+        
+        // Objeto con todas las formas
+        const formas = {
+            polyline: polyline,
+            polygon: polygon,
+            rectangle: rectangle,
+            circle: circle
+        };
+        
+        // Estado de visibilidad
+        const visible = {
+            polyline: true,
+            polygon: true,
+            rectangle: true,
+            circle: true
+        };
+        
+        // Mostrar todas inicialmente
+        mostrarTodas();
+        
+        function toggleForma(tipo) {
+            if (visible[tipo]) {
+                mapa.removeLayer(formas[tipo]);
+                visible[tipo] = false;
+            } else {
+                formas[tipo].addTo(mapa);
+                visible[tipo] = true;
+            }
+        }
+        
+        function mostrarTodas() {
+            Object.keys(formas).forEach(tipo => {
+                if (!visible[tipo]) {
+                    formas[tipo].addTo(mapa);
+                    visible[tipo] = true;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

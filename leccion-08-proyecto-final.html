@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lección 8: Proyecto Final - Guía Turística Interactiva</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Rajdhani:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        :root { --cyber-cyan: #00ffff; --cyber-magenta: #ff00ff; --cyber-card: #0d0f1a; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: linear-gradient(135deg, #0a0a12 0%, #1a0a2e 50%, #0d0d1a 100%);
+            min-height: 100vh;
+            color: #e0e8ff;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+            pointer-events: none;
+            z-index: 9998;
+        }
+        
+        .app-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            height: 100vh;
+        }
+        
+        @media (max-width: 900px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 40vh;
+                z-index: 1000;
+                border-radius: 20px 20px 0 0;
+            }
+        }
+        
+        .sidebar {
+            background: linear-gradient(180deg, #16213e 0%, #1a1a2e 100%);
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .logo {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            background: linear-gradient(135deg, var(--cyber-cyan) 0%, var(--cyber-magenta) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 2px;
+        }
+        
+        .tagline {
+            color: #8892a8;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 15px 12px 40px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            background: rgba(0, 255, 255, 0.05);
+            color: #e0e8ff;
+            font-size: 14px;
+        }
+        
+        .search-box input::placeholder {
+            color: #8892a8;
+        }
+        
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        .category-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .filter-btn {
+            padding: 8px 15px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            background: transparent;
+            color: #8892a8;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: rgba(0, 255, 255, 0.1);
+            color: var(--cyber-cyan);
+            border-color: var(--cyber-cyan);
+        }
+        
+        .places-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .place-card {
+            background: rgba(0, 255, 255, 0.03);
+            border-radius: 4px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            border-left: 4px solid transparent;
+        }
+        
+        .place-card:hover {
+            transform: translateX(5px);
+            border-left-color: var(--cyber-cyan);
+        }
+        
+        .place-card.active {
+            background: rgba(0, 255, 255, 0.08);
+            border-left-color: var(--cyber-cyan);
+            border-color: rgba(0, 255, 255, 0.3);
+        }
+        
+        .place-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        
+        .place-icon {
+            font-size: 24px;
+        }
+        
+        .place-name {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .place-category {
+            font-size: 11px;
+            color: var(--cyber-cyan);
+            text-transform: uppercase;
+        }
+        
+        .place-description {
+            font-size: 12px;
+            color: #8892a8;
+            line-height: 1.4;
+        }
+        
+        .place-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 11px;
+            color: #8892a8;
+        }
+        
+        #mapa {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--cyber-card);
+            border: 1px solid var(--cyber-cyan);
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            max-width: 300px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .info-panel.visible {
+            display: block;
+        }
+        
+        .info-panel h3 {
+            color: var(--cyber-cyan);
+            margin-bottom: 10px;
+        }
+        
+        .info-panel p {
+            color: #8892a8;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .info-panel .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .stats-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(0, 255, 255, 0.2);
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--cyber-cyan);
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #8892a8;
+        }
+        
+        .lesson-badge {
+            position: absolute;
+            top: 20px;
+            left: 370px;
+            background: transparent;
+            border: 1px solid var(--cyber-magenta);
+            color: var(--cyber-magenta);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+        }
+        
+        @media (max-width: 900px) {
+            .lesson-badge {
+                left: 20px;
+            }
+        }
+        
+        .map-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 370px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        @media (max-width: 900px) {
+            .map-controls {
+                left: 20px;
+                bottom: 45vh;
+            }
+        }
+        
+        .map-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--cyber-cyan);
+            border-radius: 4px;
+            background: transparent;
+            color: var(--cyber-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        
+        .map-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(0, 255, 255, 0.4);
+        }
+        
+        /* Estilos para popups personalizados */
+        .custom-popup .leaflet-popup-content-wrapper {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 5px;
+        }
+        
+        .custom-popup .leaflet-popup-tip {
+            background: #1a1a2e;
+        }
+        
+        .popup-content {
+            padding: 10px;
+        }
+        
+        .popup-content h4 {
+            margin-bottom: 5px;
+        }
+        
+        .popup-content p {
+            font-size: 12px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+        
+        .popup-btn {
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        /* Estilos de iconos en el mapa */
+        .map-marker {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            border: 3px solid white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            transition: transform 0.3s;
+        }
+        
+        .map-marker:hover {
+            transform: scale(1.2);
+        }
+        
+        .marker-museo { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .marker-restaurante { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .marker-parque { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .marker-monumento { background: linear-gradient(135deg, #f39c12, #d68910); }
+        .marker-hotel { background: linear-gradient(135deg, #3498db, #2980b9); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div class="logo">🗺️ Madrid Explorer</div>
+            <div class="tagline">Descubre los mejores lugares de la ciudad</div>
+            
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Buscar lugares...">
+            </div>
+            
+            <div class="category-filters">
+                <button class="filter-btn active" data-category="todos">Todos</button>
+                <button class="filter-btn" data-category="museo">🏛️ Museos</button>
+                <button class="filter-btn" data-category="restaurante">🍽️ Restaurantes</button>
+                <button class="filter-btn" data-category="parque">🌳 Parques</button>
+                <button class="filter-btn" data-category="monumento">🏛️ Monumentos</button>
+                <button class="filter-btn" data-category="hotel">🏨 Hoteles</button>
+            </div>
+            
+            <div class="places-list" id="placesList">
+                <!-- Se llena dinámicamente -->
+            </div>
+        </div>
+        
+        <div style="position: relative;">
+            <div id="mapa"></div>
+            
+            <div class="lesson-badge">🎓 Proyecto Final - Lección 8</div>
+            
+            <div class="map-controls">
+                <button class="map-btn" onclick="verTodos()">📍 Ver Todos</button>
+                <button class="map-btn" onclick="rutaTuristica()">🚶 Ruta Turística</button>
+                <button class="map-btn" onclick="toggleCapas()">🗂️ Capas</button>
+            </div>
+            
+            <div class="info-panel" id="infoPanel">
+                <button class="close-btn" onclick="cerrarPanel()">&times;</button>
+                <h3 id="panelTitle">Título</h3>
+                <p id="panelDescription">Descripción</p>
+                <div class="stats-row">
+                    <div class="stat">
+                        <div class="stat-value" id="statRating">4.5</div>
+                        <div class="stat-label">Rating</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="statVisitors">1.2M</div>
+                        <div class="stat-label">Visitantes/año</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="statPrice">€€</div>
+                        <div class="stat-label">Precio</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ========================================
+        // DATOS DE LA APLICACIÓN
+        // ========================================
+        const lugares = [
+            {
+                id: 1,
+                nombre: "Museo del Prado",
+                categoria: "museo",
+                emoji: "🖼️",
+                lat: 40.4138,
+                lng: -3.6921,
+                descripcion: "Uno de los museos de arte más importantes del mundo con obras de Velázquez, Goya y El Greco.",
+                rating: 4.8,
+                visitantes: "3.2M",
+                precio: "€€"
+            },
+            {
+                id: 2,
+                nombre: "Museo Reina Sofía",
+                categoria: "museo",
+                emoji: "🎨",
+                lat: 40.4086,
+                lng: -3.6943,
+                descripcion: "Arte contemporáneo español con el Guernica de Picasso como obra estrella.",
+                rating: 4.6,
+                visitantes: "2.1M",
+                precio: "€"
+            },
+            {
+                id: 3,
+                nombre: "Sobrino de Botín",
+                categoria: "restaurante",
+                emoji: "🍖",
+                lat: 40.4145,
+                lng: -3.7084,
+                descripcion: "El restaurante más antiguo del mundo según Guinness. Especialidad: cochinillo asado.",
+                rating: 4.4,
+                visitantes: "50K",
+                precio: "€€€"
+            },
+            {
+                id: 4,
+                nombre: "Mercado de San Miguel",
+                categoria: "restaurante",
+                emoji: "🍷",
+                lat: 40.4155,
+                lng: -3.7089,
+                descripcion: "Mercado gastronómico con los mejores productos y tapas de España.",
+                rating: 4.3,
+                visitantes: "10M",
+                precio: "€€"
+            },
+            {
+                id: 5,
+                nombre: "Parque del Retiro",
+                categoria: "parque",
+                emoji: "🌳",
+                lat: 40.4153,
+                lng: -3.6845,
+                descripcion: "El pulmón verde de Madrid con 118 hectáreas de jardines, lagos y monumentos.",
+                rating: 4.7,
+                visitantes: "15M",
+                precio: "Gratis"
+            },
+            {
+                id: 6,
+                nombre: "Palacio Real",
+                categoria: "monumento",
+                emoji: "👑",
+                lat: 40.4180,
+                lng: -3.7142,
+                descripcion: "Residencia oficial de los Reyes de España. El palacio real más grande de Europa Occidental.",
+                rating: 4.7,
+                visitantes: "1.5M",
+                precio: "€€"
+            },
+            {
+                id: 7,
+                nombre: "Puerta del Sol",
+                categoria: "monumento",
+                emoji: "🐻",
+                lat: 40.4168,
+                lng: -3.7038,
+                descripcion: "El kilómetro cero de España. Centro neurálgico con el famoso Oso y el Madroño.",
+                rating: 4.5,
+                visitantes: "∞",
+                precio: "Gratis"
+            },
+            {
+                id: 8,
+                nombre: "Hotel Ritz",
+                categoria: "hotel",
+                emoji: "🏨",
+                lat: 40.4152,
+                lng: -3.6934,
+                descripcion: "Hotel de lujo legendario inaugurado en 1910 por el rey Alfonso XIII.",
+                rating: 4.9,
+                visitantes: "N/A",
+                precio: "€€€€"
+            },
+            {
+                id: 9,
+                nombre: "Gran Vía",
+                categoria: "monumento",
+                emoji: "🌃",
+                lat: 40.4200,
+                lng: -3.7057,
+                descripcion: "La arteria principal de Madrid con teatros, tiendas y arquitectura impresionante.",
+                rating: 4.6,
+                visitantes: "∞",
+                precio: "Gratis"
+            },
+            {
+                id: 10,
+                nombre: "Casa de Campo",
+                categoria: "parque",
+                emoji: "🌲",
+                lat: 40.4197,
+                lng: -3.7487,
+                descripcion: "El parque urbano más grande de España con zoo, teleférico y lago.",
+                rating: 4.4,
+                visitantes: "5M",
+                precio: "Gratis"
+            }
+        ];
+        
+        // ========================================
+        // INICIALIZACIÓN DEL MAPA
+        // ========================================
+        const mapa = L.map('mapa', {
+            zoomControl: false
+        }).setView([40.4168, -3.7038], 14);
+        
+        // Control de zoom en otra posición
+        L.control.zoom({ position: 'bottomright' }).addTo(mapa);
+        
+        // Capas base
+        const capaOscura = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; CartoDB'
+        });
+        
+        const capaClara = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; CartoDB'
+        });
+        
+        const capaSatelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; Esri'
+        });
+        
+        // Añadir capa oscura por defecto
+        capaOscura.addTo(mapa);
+        
+        // Control de capas
+        const capasBase = {
+            "🌙 Oscuro": capaOscura,
+            "☀️ Claro": capaClara,
+            "🛰️ Satélite": capaSatelite
+        };
+        
+        let controlCapas = null;
+        
+        // ========================================
+        // FUNCIONES DE ICONOS
+        // ========================================
+        function crearIcono(categoria, emoji) {
+            const clases = {
+                museo: 'marker-museo',
+                restaurante: 'marker-restaurante',
+                parque: 'marker-parque',
+                monumento: 'marker-monumento',
+                hotel: 'marker-hotel'
+            };
+            
+            return L.divIcon({
+                html: `<div class="map-marker ${clases[categoria]}">${emoji}</div>`,
+                className: '',
+                iconSize: [40, 40],
+                iconAnchor: [20, 20],
+                popupAnchor: [0, -20]
+            });
+        }
+        
+        // ========================================
+        // CREAR MARCADORES Y CAPAS
+        // ========================================
+        const marcadores = {};
+        const grupoMarcadores = L.featureGroup();
+        
+        lugares.forEach(lugar => {
+            const marcador = L.marker([lugar.lat, lugar.lng], {
+                icon: crearIcono(lugar.categoria, lugar.emoji)
+            });
+            
+            // Popup personalizado
+            const popupContent = `
+                <div class="popup-content">
+                    <h4>${lugar.emoji} ${lugar.nombre}</h4>
+                    <p>${lugar.descripcion.substring(0, 80)}...</p>
+                    <button class="popup-btn" onclick="mostrarDetalles(${lugar.id})">
+                        Ver más detalles
+                    </button>
+                </div>
+            `;
+            
+            marcador.bindPopup(popupContent, {
+                className: 'custom-popup',
+                maxWidth: 250
+            });
+            
+            // Eventos
+            marcador.on('click', function() {
+                highlightCard(lugar.id);
+            });
+            
+            marcadores[lugar.id] = marcador;
+            grupoMarcadores.addLayer(marcador);
+        });
+        
+        grupoMarcadores.addTo(mapa);
+        
+        // ========================================
+        // RENDERIZAR LISTA DE LUGARES
+        // ========================================
+        function renderizarLista(filtro = 'todos', busqueda = '') {
+            const lista = document.getElementById('placesList');
+            lista.innerHTML = '';
+            
+            const filtrados = lugares.filter(lugar => {
+                const coincideCategoria = filtro === 'todos' || lugar.categoria === filtro;
+                const coincideBusqueda = lugar.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+                                         lugar.descripcion.toLowerCase().includes(busqueda.toLowerCase());
+                return coincideCategoria && coincideBusqueda;
+            });
+            
+            filtrados.forEach(lugar => {
+                const card = document.createElement('div');
+                card.className = 'place-card';
+                card.id = `card-${lugar.id}`;
+                card.innerHTML = `
+                    <div class="place-header">
+                        <span class="place-icon">${lugar.emoji}</span>
+                        <div>
+                            <div class="place-name">${lugar.nombre}</div>
+                            <div class="place-category">${lugar.categoria}</div>
+                        </div>
+                    </div>
+                    <div class="place-description">${lugar.descripcion.substring(0, 100)}...</div>
+                    <div class="place-meta">
+                        <span>⭐ ${lugar.rating}</span>
+                        <span>👥 ${lugar.visitantes}</span>
+                        <span>💰 ${lugar.precio}</span>
+                    </div>
+                `;
+                
+                card.addEventListener('click', () => {
+                    irALugar(lugar.id);
+                });
+                
+                lista.appendChild(card);
+            });
+            
+            // Actualizar marcadores visibles
+            actualizarMarcadores(filtrados);
+        }
+        
+        function actualizarMarcadores(lugaresVisibles) {
+            const idsVisibles = lugaresVisibles.map(l => l.id);
+            
+            Object.entries(marcadores).forEach(([id, marcador]) => {
+                if (idsVisibles.includes(parseInt(id))) {
+                    if (!mapa.hasLayer(marcador)) {
+                        marcador.addTo(mapa);
+                    }
+                } else {
+                    mapa.removeLayer(marcador);
+                }
+            });
+        }
+        
+        // ========================================
+        // INTERACTIVIDAD
+        // ========================================
+        function irALugar(id) {
+            const lugar = lugares.find(l => l.id === id);
+            if (lugar) {
+                mapa.setView([lugar.lat, lugar.lng], 17);
+                marcadores[id].openPopup();
+                highlightCard(id);
+            }
+        }
+        
+        function highlightCard(id) {
+            document.querySelectorAll('.place-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            const card = document.getElementById(`card-${id}`);
+            if (card) {
+                card.classList.add('active');
+                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+        
+        function mostrarDetalles(id) {
+            const lugar = lugares.find(l => l.id === id);
+            if (lugar) {
+                document.getElementById('panelTitle').textContent = `${lugar.emoji} ${lugar.nombre}`;
+                document.getElementById('panelDescription').textContent = lugar.descripcion;
+                document.getElementById('statRating').textContent = lugar.rating;
+                document.getElementById('statVisitors').textContent = lugar.visitantes;
+                document.getElementById('statPrice').textContent = lugar.precio;
+                document.getElementById('infoPanel').classList.add('visible');
+            }
+        }
+        
+        function cerrarPanel() {
+            document.getElementById('infoPanel').classList.remove('visible');
+        }
+        
+        // ========================================
+        // FUNCIONES DEL MAPA
+        // ========================================
+        function verTodos() {
+            renderizarLista('todos');
+            mapa.fitBounds(grupoMarcadores.getBounds().pad(0.1));
+        }
+        
+        let rutaActual = null;
+        function rutaTuristica() {
+            if (rutaActual) {
+                mapa.removeLayer(rutaActual);
+                rutaActual = null;
+                return;
+            }
+            
+            // Crear ruta con algunos lugares principales
+            const puntosRuta = [
+                [40.4180, -3.7142],  // Palacio Real
+                [40.4168, -3.7038],  // Sol
+                [40.4145, -3.7084],  // Botín
+                [40.4138, -3.6921],  // Prado
+                [40.4153, -3.6845]   // Retiro
+            ];
+            
+            rutaActual = L.polyline(puntosRuta, {
+                color: '#00d2ff',
+                weight: 4,
+                opacity: 0.8,
+                dashArray: '10, 10'
+            }).addTo(mapa);
+            
+            mapa.fitBounds(rutaActual.getBounds().pad(0.1));
+        }
+        
+        function toggleCapas() {
+            if (controlCapas) {
+                mapa.removeControl(controlCapas);
+                controlCapas = null;
+            } else {
+                controlCapas = L.control.layers(capasBase, null, {
+                    position: 'topright',
+                    collapsed: false
+                }).addTo(mapa);
+            }
+        }
+        
+        // ========================================
+        // EVENT LISTENERS
+        // ========================================
+        
+        // Filtros de categoría
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                const categoria = this.dataset.category;
+                renderizarLista(categoria, document.getElementById('searchInput').value);
+            });
+        });
+        
+        // Búsqueda
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const categoriaActiva = document.querySelector('.filter-btn.active').dataset.category;
+            renderizarLista(categoriaActiva, e.target.value);
+        });
+        
+        // Evento click en el mapa para añadir marcadores (demostración)
+        mapa.on('contextmenu', function(e) {
+            const lat = e.latlng.lat.toFixed(4);
+            const lng = e.latlng.lng.toFixed(4);
+            
+            L.popup()
+                .setLatLng(e.latlng)
+                .setContent(`
+                    <div style="text-align: center; padding: 10px;">
+                        <strong>📍 Coordenadas</strong><br>
+                        Lat: ${lat}<br>
+                        Lng: ${lng}<br>
+                        <small style="color: #888;">Clic derecho para info</small>
+                    </div>
+                `)
+                .openOn(mapa);
+        });
+        
+        // ========================================
+        // INICIALIZACIÓN
+        // ========================================
+        renderizarLista();
+        
+        // Añadir escala
+        L.control.scale({
+            position: 'bottomleft',
+            metric: true,
+            imperial: false
+        }).addTo(mapa);
+    </script>
+</body>
+</html>
