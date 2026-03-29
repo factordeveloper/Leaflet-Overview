@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Lección 9: Explorador Satelital - Lia</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <style>
+        :root {
+            --cyber-cyan: #00ffff;
+            --cyber-magenta: #ff00ff;
+            --cyber-green: #39e5a7;
+            --cyber-card: #0d0f1aee;
+            --glow-cyan: 0 0 20px rgba(0, 255, 255, 0.4);
+            --glow-green: 0 0 20px rgba(57, 229, 167, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #0a0a12;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            color: #e0e8ff;
+        }
+
+        /* ===== MAPA OCUPA TODA LA PANTALLA ===== */
+        #mapa {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        /* ===== SCANLINE OVERLAY ===== */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0,0,0,0.03) 2px,
+                rgba(0,0,0,0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 9998;
+        }
+
+        /* ===== HEADER BADGE ===== */
+        .header-badge {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9000;
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 50px;
+            padding: 10px 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(12px);
+            box-shadow: var(--glow-cyan);
+            animation: fadeSlideDown 0.6s ease-out;
+        }
+
+        .header-badge img {
+            width: 32px;
+            height: 32px;
+            filter: drop-shadow(0 0 6px var(--cyber-green));
+        }
+
+        .header-badge .title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 13px;
+            letter-spacing: 2px;
+            color: var(--cyber-cyan);
+            white-space: nowrap;
+        }
+
+        .header-badge .subtitle {
+            font-size: 11px;
+            color: #8892a8;
+            letter-spacing: 1px;
+        }
+
+        /* ===== COORDENADAS HUD ===== */
+        .coords-hud {
+            position: fixed;
+            top: 80px;
+            left: 16px;
+            z-index: 9000;
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 14px 18px;
+            backdrop-filter: blur(12px);
+            min-width: 200px;
+            animation: fadeSlideRight 0.5s ease-out 0.2s both;
+        }
+
+        .coords-hud .label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: var(--cyber-green);
+            margin-bottom: 6px;
+        }
+
+        .coords-hud .value {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            color: var(--cyber-cyan);
+            letter-spacing: 1px;
+        }
+
+        .coords-hud .value span {
+            color: #8892a8;
+        }
+
+        /* ===== SPEED CONTROL ===== */
+        .speed-control {
+            position: fixed;
+            top: 80px;
+            right: 16px;
+            z-index: 9000;
+            background: var(--cyber-card);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 14px 18px;
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            animation: fadeSlideLeft 0.5s ease-out 0.3s both;
+        }
+
+        .speed-control .label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: var(--cyber-green);
+        }
+
+        .speed-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .speed-btn {
+            padding: 6px 12px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+            background: transparent;
+            color: #8892a8;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .speed-btn:hover {
+            border-color: var(--cyber-cyan);
+            color: var(--cyber-cyan);
+        }
+
+        .speed-btn.active {
+            background: rgba(0, 255, 255, 0.12);
+            border-color: var(--cyber-cyan);
+            color: var(--cyber-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        /* ===== D-PAD CONTROLS ===== */
+        .dpad-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 9000;
+            animation: fadeScaleIn 0.5s ease-out 0.4s both;
+        }
+
+        .dpad {
+            display: grid;
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px 60px;
+            gap: 4px;
+        }
+
+        .dpad-btn {
+            width: 60px;
+            height: 60px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            background: var(--cyber-card);
+            color: var(--cyber-cyan);
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            backdrop-filter: blur(12px);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        .dpad-btn:hover {
+            background: rgba(0, 255, 255, 0.08);
+            border-color: var(--cyber-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .dpad-btn:active, .dpad-btn.pressed {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: var(--cyber-cyan);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.6);
+            transform: scale(0.92);
+        }
+
+        .dpad-btn.center {
+            border-color: var(--cyber-green);
+            color: var(--cyber-green);
+            font-size: 16px;
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .dpad-btn.center:hover {
+            border-color: var(--cyber-green);
+            box-shadow: var(--glow-green);
+        }
+
+        .dpad-btn.center:active, .dpad-btn.center.pressed {
+            background: rgba(57, 229, 167, 0.2);
+            box-shadow: 0 0 30px rgba(57, 229, 167, 0.6);
+        }
+
+        .dpad-btn.empty {
+            visibility: hidden;
+        }
+
+        /* ===== ZOOM CONTROLS ===== */
+        .zoom-controls {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            z-index: 9000;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            animation: fadeScaleIn 0.5s ease-out 0.5s both;
+        }
+
+        .zoom-btn {
+            width: 48px;
+            height: 48px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            background: var(--cyber-card);
+            color: var(--cyber-cyan);
+            font-size: 22px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            backdrop-filter: blur(12px);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .zoom-btn:hover {
+            background: rgba(0, 255, 255, 0.08);
+            border-color: var(--cyber-cyan);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .zoom-btn:active {
+            background: rgba(0, 255, 255, 0.2);
+            transform: scale(0.92);
+        }
+
+        /* ===== TRAIL / PATH TRACKING ===== */
+        .trail-toggle {
+            position: fixed;
+            bottom: 140px;
+            left: 30px;
+            z-index: 9000;
+            animation: fadeScaleIn 0.5s ease-out 0.6s both;
+        }
+
+        .trail-btn {
+            padding: 10px 16px;
+            border: 1px solid rgba(57, 229, 167, 0.3);
+            border-radius: 8px;
+            background: var(--cyber-card);
+            color: #8892a8;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 10px;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .trail-btn:hover {
+            border-color: var(--cyber-green);
+            color: var(--cyber-green);
+        }
+
+        .trail-btn.active {
+            background: rgba(57, 229, 167, 0.12);
+            border-color: var(--cyber-green);
+            color: var(--cyber-green);
+            box-shadow: var(--glow-green);
+        }
+
+        .trail-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* ===== AVATAR MARKER STYLES ===== */
+        .lia-marker {
+            background: none !important;
+            border: none !important;
+        }
+
+        .lia-avatar-wrapper {
+            width: 52px;
+            height: 52px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lia-avatar-wrapper::before {
+            content: '';
+            position: absolute;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 2px solid var(--cyber-green);
+            animation: avatarPulse 2.5s ease-in-out infinite;
+            box-shadow: 0 0 15px rgba(57, 229, 167, 0.4);
+        }
+
+        .lia-avatar-wrapper img {
+            width: 44px;
+            height: 44px;
+            filter: drop-shadow(0 0 10px rgba(57, 229, 167, 0.7));
+            transition: transform 0.3s ease;
+        }
+
+        .lia-avatar-wrapper.moving img {
+            animation: avatarBob 0.4s ease-in-out infinite;
+        }
+
+        /* ===== NAV LINK ===== */
+        .nav-back {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9000;
+            text-decoration: none;
+            padding: 10px 24px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 50px;
+            background: var(--cyber-card);
+            color: var(--cyber-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+            animation: fadeSlideUp 0.5s ease-out 0.7s both;
+        }
+
+        .nav-back:hover {
+            box-shadow: var(--glow-cyan);
+            border-color: var(--cyber-cyan);
+        }
+
+        /* ===== KEYBOARD HINT ===== */
+        .keyboard-hint {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9000;
+            background: var(--cyber-card);
+            border: 1px solid rgba(255, 0, 255, 0.3);
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-size: 11px;
+            color: #8892a8;
+            backdrop-filter: blur(12px);
+            animation: fadeSlideDown 0.5s ease-out 0.8s both;
+            display: none;
+        }
+
+        .keyboard-hint kbd {
+            display: inline-block;
+            padding: 2px 6px;
+            border: 1px solid rgba(255, 0, 255, 0.4);
+            border-radius: 3px;
+            font-family: 'Consolas', monospace;
+            font-size: 10px;
+            color: var(--cyber-magenta);
+            margin: 0 2px;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes avatarPulse {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.3); opacity: 0; }
+        }
+
+        @keyframes avatarBob {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-3px) rotate(5deg); }
+            75% { transform: translateY(1px) rotate(-3deg); }
+        }
+
+        @keyframes fadeSlideDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        @keyframes fadeSlideRight {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeSlideLeft {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        @keyframes fadeScaleIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (min-width: 769px) {
+            .keyboard-hint { display: block; }
+        }
+
+        @media (max-width: 768px) {
+            .header-badge {
+                top: 10px;
+                padding: 8px 18px;
+                gap: 8px;
+            }
+
+            .header-badge img { width: 24px; height: 24px; }
+            .header-badge .title { font-size: 11px; letter-spacing: 1px; }
+            .header-badge .subtitle { font-size: 9px; }
+
+            .coords-hud {
+                top: auto;
+                bottom: 220px;
+                left: 10px;
+                padding: 10px 14px;
+                min-width: 160px;
+            }
+
+            .coords-hud .value { font-size: 12px; }
+
+            .speed-control {
+                top: 60px;
+                right: 10px;
+                padding: 10px 12px;
+            }
+
+            .dpad-container {
+                bottom: 20px;
+                right: 50%;
+                transform: translateX(50%);
+            }
+
+            .dpad {
+                grid-template-columns: 52px 52px 52px;
+                grid-template-rows: 52px 52px 52px;
+                gap: 3px;
+            }
+
+            .dpad-btn { width: 52px; height: 52px; font-size: 20px; }
+
+            .zoom-controls {
+                bottom: 220px;
+                left: auto;
+                right: 10px;
+                flex-direction: row;
+            }
+
+            .zoom-btn { width: 42px; height: 42px; font-size: 18px; }
+
+            .trail-toggle {
+                bottom: 220px;
+                left: 10px;
+            }
+
+            .trail-btn { 
+                padding: 8px 12px;
+                font-size: 9px;
+            }
+
+            .nav-back {
+                bottom: auto;
+                top: 60px;
+                left: 10px;
+                transform: none;
+                padding: 8px 14px;
+                font-size: 9px;
+                animation: fadeSlideRight 0.5s ease-out 0.7s both;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .dpad {
+                grid-template-columns: 46px 46px 46px;
+                grid-template-rows: 46px 46px 46px;
+            }
+            .dpad-btn { width: 46px; height: 46px; font-size: 18px; }
+            .speed-control { display: none; }
+        }
+
+        /* ===== HIDE DEFAULT LEAFLET CONTROLS ===== */
+        .leaflet-control-zoom { display: none !important; }
+        .leaflet-control-attribution { 
+            background: var(--cyber-card) !important;
+            color: #555 !important;
+            border: 1px solid rgba(0,255,255,0.1) !important;
+            border-radius: 4px !important;
+            font-size: 10px !important;
+        }
+        .leaflet-control-attribution a { color: var(--cyber-cyan) !important; }
+    </style>
+</head>
+<body>
+
+    <!-- Mapa -->
+    <div id="mapa"></div>
+
+    <!-- Scanlines overlay -->
+    <div class="scanlines"></div>
+
+    <!-- Header -->
+    <div class="header-badge">
+        <img src="lia_avatar.png" alt="Lia">
+        <div>
+            <div class="title">LIA EXPLORER</div>
+            <div class="subtitle">Bogotá Satelital</div>
+        </div>
+    </div>
+
+    <!-- Keyboard hint (desktop only) -->
+    <div class="keyboard-hint">
+        Usa las teclas <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> o <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> para mover a Lia
+    </div>
+
+    <!-- Coordinate HUD -->
+    <div class="coords-hud">
+        <div class="label">📡 POSICIÓN</div>
+        <div class="value">
+            <span>LAT</span> <span id="latDisplay">4.6100</span><br>
+            <span>LNG</span> <span id="lngDisplay">-74.0700</span>
+        </div>
+    </div>
+
+    <!-- Speed Control -->
+    <div class="speed-control">
+        <div class="label">⚡ VELOCIDAD</div>
+        <div class="speed-buttons">
+            <button class="speed-btn" data-speed="0.0003" id="speed1">×1</button>
+            <button class="speed-btn active" data-speed="0.0008" id="speed2">×2</button>
+            <button class="speed-btn" data-speed="0.002" id="speed3">×5</button>
+        </div>
+    </div>
+
+    <!-- D-Pad -->
+    <div class="dpad-container">
+        <div class="dpad">
+            <div class="dpad-btn empty"></div>
+            <button class="dpad-btn" id="btnUp" aria-label="Mover arriba">▲</button>
+            <div class="dpad-btn empty"></div>
+
+            <button class="dpad-btn" id="btnLeft" aria-label="Mover izquierda">◀</button>
+            <button class="dpad-btn center" id="btnCenter" aria-label="Centrar">🎯</button>
+            <button class="dpad-btn" id="btnRight" aria-label="Mover derecha">▶</button>
+
+            <div class="dpad-btn empty"></div>
+            <button class="dpad-btn" id="btnDown" aria-label="Mover abajo">▼</button>
+            <div class="dpad-btn empty"></div>
+        </div>
+    </div>
+
+    <!-- Zoom Controls -->
+    <div class="zoom-controls">
+        <button class="zoom-btn" id="zoomIn" aria-label="Acercar">+</button>
+        <button class="zoom-btn" id="zoomOut" aria-label="Alejar">−</button>
+    </div>
+
+    <!-- Trail Toggle -->
+    <div class="trail-toggle">
+        <button class="trail-btn" id="trailBtn">
+            <span class="trail-dot"></span>
+            TRAIL
+        </button>
+    </div>
+
+    <!-- Nav back -->
+    <a href="leccion-08-proyecto-final.html" class="nav-back">← VOLVER</a>
+
+    <script>
+        // =============================================
+        // MAP INITIALIZATION
+        // =============================================
+        const mapa = L.map('mapa', {
+            zoomControl: false,
+            keyboard: false,
+            center: [4.6100, -74.0700],
+            zoom: 16,
+            minZoom: 10,
+            maxZoom: 19
+        });
+
+        // Satellite tile layer (Esri)
+        L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '&copy; Esri &mdash; Earthstar Geographics',
+            maxZoom: 19
+        }).addTo(mapa);
+
+        // Labels overlay on top of satellite
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+            attribution: '',
+            maxZoom: 19,
+            pane: 'overlayPane'
+        }).addTo(mapa);
+
+        // =============================================
+        // LIA AVATAR MARKER
+        // =============================================
+        let liaLat = 4.6100;
+        let liaLng = -74.0700;
+        let moveSpeed = 0.0008;
+        let isMoving = false;
+        let trailEnabled = false;
+        let trailPoints = [];
+        let trailLine = null;
+
+        const liaIcon = L.divIcon({
+            html: `
+                <div class="lia-avatar-wrapper" id="liaWrapper">
+                    <img src="lia_avatar.png" alt="Lia" />
+                </div>
+            `,
+            className: 'lia-marker',
+            iconSize: [52, 52],
+            iconAnchor: [26, 26]
+        });
+
+        const liaMarker = L.marker([liaLat, liaLng], {
+            icon: liaIcon,
+            zIndexOffset: 1000
+        }).addTo(mapa);
+
+        liaMarker.bindPopup(`
+            <div style="text-align:center; padding: 8px;">
+                <img src="lia_avatar.png" alt="Lia" style="width:48px; filter: drop-shadow(0 0 6px #39e5a7);" /><br>
+                <strong style="color: #39e5a7;">Lia</strong><br>
+                <small style="color: #888;">Exploradora de Bogotá</small>
+            </div>
+        `, { className: 'custom-popup' });
+
+        // =============================================
+        // MOVEMENT LOGIC
+        // =============================================
+        const activeKeys = new Set();
+        let animFrameId = null;
+
+        function updatePosition() {
+            let moved = false;
+
+            if (activeKeys.has('up')) { liaLat += moveSpeed; moved = true; }
+            if (activeKeys.has('down')) { liaLat -= moveSpeed; moved = true; }
+            if (activeKeys.has('left')) { liaLng -= moveSpeed; moved = true; }
+            if (activeKeys.has('right')) { liaLng += moveSpeed; moved = true; }
+
+            if (moved) {
+                liaMarker.setLatLng([liaLat, liaLng]);
+                mapa.panTo([liaLat, liaLng], { animate: false });
+
+                // Update HUD
+                document.getElementById('latDisplay').textContent = liaLat.toFixed(5);
+                document.getElementById('lngDisplay').textContent = liaLng.toFixed(5);
+
+                // Trail
+                if (trailEnabled) {
+                    trailPoints.push([liaLat, liaLng]);
+                    if (trailLine) {
+                        trailLine.setLatLngs(trailPoints);
+                    } else {
+                        trailLine = L.polyline(trailPoints, {
+                            color: '#39e5a7',
+                            weight: 3,
+                            opacity: 0.7,
+                            dashArray: '6, 8',
+                            lineCap: 'round'
+                        }).addTo(mapa);
+                    }
+                }
+
+                // Moving animation class
+                if (!isMoving) {
+                    isMoving = true;
+                    document.getElementById('liaWrapper').classList.add('moving');
+                }
+            } else {
+                if (isMoving) {
+                    isMoving = false;
+                    document.getElementById('liaWrapper').classList.remove('moving');
+                }
+            }
+
+            if (activeKeys.size > 0) {
+                animFrameId = requestAnimationFrame(updatePosition);
+            } else {
+                animFrameId = null;
+            }
+        }
+
+        function startDirection(dir) {
+            if (!activeKeys.has(dir)) {
+                activeKeys.add(dir);
+                if (!animFrameId) {
+                    animFrameId = requestAnimationFrame(updatePosition);
+                }
+            }
+        }
+
+        function stopDirection(dir) {
+            activeKeys.delete(dir);
+            if (activeKeys.size === 0 && animFrameId) {
+                cancelAnimationFrame(animFrameId);
+                animFrameId = null;
+                isMoving = false;
+                const w = document.getElementById('liaWrapper');
+                if (w) w.classList.remove('moving');
+            }
+        }
+
+        // =============================================
+        // KEYBOARD INPUT
+        // =============================================
+        const keyMap = {
+            'ArrowUp': 'up', 'w': 'up', 'W': 'up',
+            'ArrowDown': 'down', 's': 'down', 'S': 'down',
+            'ArrowLeft': 'left', 'a': 'left', 'A': 'left',
+            'ArrowRight': 'right', 'd': 'right', 'D': 'right'
+        };
+
+        document.addEventListener('keydown', (e) => {
+            const dir = keyMap[e.key];
+            if (dir) {
+                e.preventDefault();
+                startDirection(dir);
+                // Visual feedback on D-pad
+                const btnId = { up: 'btnUp', down: 'btnDown', left: 'btnLeft', right: 'btnRight' };
+                const btn = document.getElementById(btnId[dir]);
+                if (btn) btn.classList.add('pressed');
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            const dir = keyMap[e.key];
+            if (dir) {
+                stopDirection(dir);
+                const btnId = { up: 'btnUp', down: 'btnDown', left: 'btnLeft', right: 'btnRight' };
+                const btn = document.getElementById(btnId[dir]);
+                if (btn) btn.classList.remove('pressed');
+            }
+        });
+
+        // =============================================
+        // D-PAD TOUCH/MOUSE INPUT
+        // =============================================
+        function setupDpadButton(id, direction) {
+            const btn = document.getElementById(id);
+            
+            // Mouse
+            btn.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                startDirection(direction);
+                btn.classList.add('pressed');
+            });
+
+            // Touch
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                startDirection(direction);
+                btn.classList.add('pressed');
+            }, { passive: false });
+        }
+
+        // Global mouse/touch up
+        document.addEventListener('mouseup', () => {
+            ['up', 'down', 'left', 'right'].forEach(d => stopDirection(d));
+            document.querySelectorAll('.dpad-btn.pressed').forEach(b => b.classList.remove('pressed'));
+        });
+
+        document.addEventListener('touchend', () => {
+            ['up', 'down', 'left', 'right'].forEach(d => stopDirection(d));
+            document.querySelectorAll('.dpad-btn.pressed').forEach(b => b.classList.remove('pressed'));
+        });
+
+        document.addEventListener('touchcancel', () => {
+            ['up', 'down', 'left', 'right'].forEach(d => stopDirection(d));
+            document.querySelectorAll('.dpad-btn.pressed').forEach(b => b.classList.remove('pressed'));
+        });
+
+        setupDpadButton('btnUp', 'up');
+        setupDpadButton('btnDown', 'down');
+        setupDpadButton('btnLeft', 'left');
+        setupDpadButton('btnRight', 'right');
+
+        // Center button
+        document.getElementById('btnCenter').addEventListener('click', () => {
+            mapa.setView([liaLat, liaLng], 16, { animate: true });
+        });
+        document.getElementById('btnCenter').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            mapa.setView([liaLat, liaLng], 16, { animate: true });
+        }, { passive: false });
+
+        // =============================================
+        // ZOOM CONTROLS
+        // =============================================
+        document.getElementById('zoomIn').addEventListener('click', () => mapa.zoomIn());
+        document.getElementById('zoomOut').addEventListener('click', () => mapa.zoomOut());
+
+        // =============================================
+        // SPEED CONTROLS
+        // =============================================
+        document.querySelectorAll('.speed-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                moveSpeed = parseFloat(this.dataset.speed);
+            });
+        });
+
+        // =============================================
+        // TRAIL TOGGLE
+        // =============================================
+        document.getElementById('trailBtn').addEventListener('click', function() {
+            trailEnabled = !trailEnabled;
+            this.classList.toggle('active', trailEnabled);
+            
+            if (!trailEnabled && trailLine) {
+                mapa.removeLayer(trailLine);
+                trailLine = null;
+                trailPoints = [];
+            }
+        });
+
+        // =============================================
+        // BOGOTÁ LANDMARK MARKERS
+        // =============================================
+        const landmarks = [
+            { lat: 4.5981, lng: -74.0760, name: 'Plaza de Bolívar', emoji: '🏛️' },
+            { lat: 4.6052, lng: -74.0554, name: 'Monserrate', emoji: '⛪' },
+            { lat: 4.6015, lng: -74.0722, name: 'Museo del Oro', emoji: '🪙' },
+            { lat: 4.6158, lng: -74.0683, name: 'Museo Nacional', emoji: '🏛️' },
+            { lat: 4.6103, lng: -74.0706, name: 'Torre Colpatria', emoji: '🏢' },
+            { lat: 4.6583, lng: -74.0939, name: 'Parque Simón Bolívar', emoji: '🌳' },
+        ];
+
+        landmarks.forEach(lm => {
+            const icon = L.divIcon({
+                html: `<div style="
+                    font-size: 20px;
+                    text-shadow: 0 0 8px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.5);
+                    filter: drop-shadow(0 0 4px rgba(57,229,167,0.5));
+                ">${lm.emoji}</div>`,
+                className: '',
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+
+            L.marker([lm.lat, lm.lng], { icon: icon })
+                .addTo(mapa)
+                .bindPopup(`<div style="text-align:center;"><strong>${lm.emoji} ${lm.name}</strong></div>`);
+        });
+
+        // =============================================
+        // INITIAL STATE
+        // =============================================
+        document.getElementById('latDisplay').textContent = liaLat.toFixed(5);
+        document.getElementById('lngDisplay').textContent = liaLng.toFixed(5);
+    </script>
+</body>
+</html>
