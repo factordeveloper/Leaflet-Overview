@@ -510,8 +510,8 @@ geojsonLayer.<span class="function">clearLayers</span>();
     </div>
     
     <script>
-        // Crear mapa
-        const mapa = L.map('mapa').setView([40.4168, -3.7038], 13);
+        // Crear mapa centrado en Bogotá
+        const mapa = L.map('mapa').setView([4.6040, -74.0720], 14);
         
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap &copy; CartoDB'
@@ -520,121 +520,121 @@ geojsonLayer.<span class="function">clearLayers</span>();
         // Referencia al panel de info
         const featureInfo = document.getElementById('featureInfo');
         
-        // Datos GeoJSON de ejemplo - Parques (Polígonos)
+        // Datos GeoJSON de ejemplo - Parques de Bogotá (Polígonos)
         const parquesGeoJSON = {
             "type": "FeatureCollection",
             "features": [
                 {
                     "type": "Feature",
                     "properties": {
-                        "nombre": "Parque del Retiro",
-                        "area_hectareas": 118,
+                        "nombre": "Parque Tercer Milenio",
+                        "area_hectareas": 16.5,
                         "tipo": "parque",
-                        "descripcion": "El pulmón verde de Madrid"
+                        "descripcion": "Importante renovación urbana en el centro"
                     },
                     "geometry": {
                         "type": "Polygon",
                         "coordinates": [[
-                            [-3.6830, 40.4220],
-                            [-3.6650, 40.4220],
-                            [-3.6650, 40.4100],
-                            [-3.6830, 40.4100],
-                            [-3.6830, 40.4220]
+                            [-74.0830, 4.5960],
+                            [-74.0780, 4.5960],
+                            [-74.0780, 4.5900],
+                            [-74.0830, 4.5900],
+                            [-74.0830, 4.5960]
                         ]]
                     }
                 },
                 {
                     "type": "Feature",
                     "properties": {
-                        "nombre": "Jardines de Sabatini",
-                        "area_hectareas": 2.5,
+                        "nombre": "Parque de la Independencia",
+                        "area_hectareas": 3.2,
                         "tipo": "jardin",
-                        "descripcion": "Jardines junto al Palacio Real"
+                        "descripcion": "El parque más antiguo de Bogotá"
                     },
                     "geometry": {
                         "type": "Polygon",
                         "coordinates": [[
-                            [-3.7150, 40.4215],
-                            [-3.7100, 40.4215],
-                            [-3.7100, 40.4185],
-                            [-3.7150, 40.4185],
-                            [-3.7150, 40.4215]
+                            [-74.0710, 4.6140],
+                            [-74.0680, 4.6140],
+                            [-74.0680, 4.6110],
+                            [-74.0710, 4.6110],
+                            [-74.0710, 4.6140]
                         ]]
                     }
                 }
             ]
         };
         
-        // Datos GeoJSON - Estaciones de metro (Puntos)
+        // Datos GeoJSON - Estaciones de TransMilenio (Puntos)
         const estacionesGeoJSON = {
             "type": "FeatureCollection",
             "features": [
                 {
                     "type": "Feature",
                     "properties": {
-                        "nombre": "Sol",
-                        "lineas": ["1", "2", "3"],
+                        "nombre": "Museo del Oro",
+                        "lineas": ["J", "F"],
                         "tipo": "intercambiador"
                     },
                     "geometry": {
                         "type": "Point",
-                        "coordinates": [-3.7038, 40.4168]
+                        "coordinates": [-74.0722, 4.6015]
                     }
                 },
                 {
                     "type": "Feature",
                     "properties": {
-                        "nombre": "Gran Vía",
-                        "lineas": ["1", "5"],
+                        "nombre": "Las Aguas",
+                        "lineas": ["J"],
                         "tipo": "estacion"
                     },
                     "geometry": {
                         "type": "Point",
-                        "coordinates": [-3.7055, 40.4200]
+                        "coordinates": [-74.0685, 4.6030]
                     }
                 },
                 {
                     "type": "Feature",
                     "properties": {
-                        "nombre": "Tribunal",
-                        "lineas": ["1", "10"],
+                        "nombre": "Universidades",
+                        "lineas": ["D", "H"],
                         "tipo": "estacion"
                     },
                     "geometry": {
                         "type": "Point",
-                        "coordinates": [-3.7010, 40.4260]
+                        "coordinates": [-74.0675, 4.6050]
                     }
                 },
                 {
                     "type": "Feature",
                     "properties": {
-                        "nombre": "Retiro",
-                        "lineas": ["2"],
+                        "nombre": "Calle 26",
+                        "lineas": ["A", "H"],
                         "tipo": "estacion"
                     },
                     "geometry": {
                         "type": "Point",
-                        "coordinates": [-3.6830, 40.4200]
+                        "coordinates": [-74.0710, 4.6145]
                     }
                 }
             ]
         };
         
-        // Datos GeoJSON - Línea de metro (LineString)
-        const lineaMetroGeoJSON = {
+        // Datos GeoJSON - Eje Ambiental (LineString)
+        const lineaTransmiGeoJSON = {
             "type": "Feature",
             "properties": {
-                "nombre": "Línea 1",
-                "color": "#009EE3",
-                "estaciones": 33
+                "nombre": "Eje Ambiental",
+                "color": "#FFC107",
+                "estaciones": 4
             },
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
-                    [-3.7038, 40.4168],
-                    [-3.7055, 40.4200],
-                    [-3.7010, 40.4260],
-                    [-3.6980, 40.4320]
+                    [-74.0722, 4.6015],
+                    [-74.0685, 4.6030],
+                    [-74.0675, 4.6050],
+                    [-74.0650, 4.6080]
                 ]
             }
         };
@@ -712,7 +712,7 @@ geojsonLayer.<span class="function">clearLayers</span>();
             },
             onEachFeature: function(feature, layer) {
                 layer.bindPopup(`
-                    <b>🚇 ${feature.properties.nombre}</b><br>
+                    <b>🚍 ${feature.properties.nombre}</b><br>
                     Líneas: ${feature.properties.lineas.join(', ')}<br>
                     <small>Tipo: ${feature.properties.tipo}</small>
                 `);
@@ -733,18 +733,18 @@ geojsonLayer.<span class="function">clearLayers</span>();
             }
         }).addTo(mapa);
         
-        // Cargar línea de metro
-        const lineaLayer = L.geoJSON(lineaMetroGeoJSON, {
+        // Cargar línea de Transmilenio
+        const lineaLayer = L.geoJSON(lineaTransmiGeoJSON, {
             style: {
-                color: '#2ecc71',
-                weight: 4,
+                color: '#e67e22',
+                weight: 5,
                 opacity: 0.8,
                 dashArray: '10, 5'
             },
             onEachFeature: function(feature, layer) {
                 layer.bindPopup(`
                     <b>${feature.properties.nombre}</b><br>
-                    ${feature.properties.estaciones} estaciones
+                    Recorrido TransMilenio
                 `);
                 
                 layer.on('mouseover', function() {

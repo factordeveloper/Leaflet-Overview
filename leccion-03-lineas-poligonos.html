@@ -245,19 +245,19 @@
                 <div class="legend">
                     <div class="legend-item">
                         <div class="legend-color" style="background: #e74c3c;"></div>
-                        <span>Línea (Ruta turística)</span>
+                        <span>Línea (El Septimazo)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #3498db;"></div>
-                        <span>Polígono (Zona centro)</span>
+                        <span>Polígono (La Candelaria)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #2ecc71;"></div>
-                        <span>Rectángulo (Parque)</span>
+                        <span>Rectángulo (Parque Nacional)</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-color" style="background: #9b59b6; border-radius: 50%;"></div>
-                        <span>Círculo (Radio de cobertura)</span>
+                        <span>Círculo (Zona Colpatria)</span>
                     </div>
                 </div>
             </div>
@@ -273,9 +273,9 @@
                 <div class="code-block">
 <span class="comment">// Array de coordenadas [lat, lng]</span>
 <span class="keyword">const</span> puntos = [
-    [<span class="number">40.4168</span>, <span class="number">-3.7038</span>],  <span class="comment">// Punto 1</span>
-    [<span class="number">40.4200</span>, <span class="number">-3.7100</span>],  <span class="comment">// Punto 2</span>
-    [<span class="number">40.4250</span>, <span class="number">-3.6950</span>]   <span class="comment">// Punto 3</span>
+    [<span class="number">4.5981</span>, <span class="number">-74.0760</span>],  <span class="comment">// Plaza de Bolívar</span>
+    [<span class="number">4.6100</span>, <span class="number">-74.0710</span>],  <span class="comment">// Carrera 7 con Calle 26</span>
+    [<span class="number">4.6226</span>, <span class="number">-74.0664</span>]   <span class="comment">// Parque Nacional</span>
 ];
 
 <span class="comment">// Crear la línea</span>
@@ -310,10 +310,10 @@ mapa.<span class="function">fitBounds</span>(linea.<span class="function">getBou
                 
                 <div class="code-block">
 <span class="keyword">const</span> coordenadas = [
-    [<span class="number">40.4200</span>, <span class="number">-3.7100</span>],
-    [<span class="number">40.4150</span>, <span class="number">-3.7150</span>],
-    [<span class="number">40.4100</span>, <span class="number">-3.7050</span>],
-    [<span class="number">40.4150</span>, <span class="number">-3.6950</span>]
+    [<span class="number">4.6000</span>, <span class="number">-74.0780</span>],
+    [<span class="number">4.5950</span>, <span class="number">-74.0780</span>],
+    [<span class="number">4.5950</span>, <span class="number">-74.0720</span>],
+    [<span class="number">4.6000</span>, <span class="number">-74.0720</span>]
 ];
 
 <span class="keyword">const</span> poligono = L.<span class="function">polygon</span>(coordenadas, {
@@ -324,7 +324,7 @@ mapa.<span class="function">fitBounds</span>(linea.<span class="function">getBou
 }).<span class="function">addTo</span>(mapa);
 
 <span class="comment">// Añadir popup al polígono</span>
-poligono.<span class="function">bindPopup</span>(<span class="string">'Zona centro de Madrid'</span>);
+poligono.<span class="function">bindPopup</span>(<span class="string">'Barrio La Candelaria'</span>);
                 </div>
                 
                 <div class="explanation">
@@ -359,8 +359,8 @@ L.<span class="function">polygon</span>(conAgujero).<span class="function">addTo
                 <div class="code-block">
 <span class="comment">// Esquinas del rectángulo</span>
 <span class="keyword">const</span> esquinas = [
-    [<span class="number">40.4250</span>, <span class="number">-3.6800</span>], <span class="comment">// Esquina superior-izq</span>
-    [<span class="number">40.4150</span>, <span class="number">-3.6650</span>]  <span class="comment">// Esquina inferior-der</span>
+    [<span class="number">4.6250</span>, <span class="number">-74.0700</span>], <span class="comment">// Esquina superior-izq</span>
+    [<span class="number">4.6180</span>, <span class="number">-74.0620</span>]  <span class="comment">// Esquina inferior-der</span>
 ];
 
 <span class="keyword">const</span> rectangulo = L.<span class="function">rectangle</span>(esquinas, {
@@ -378,7 +378,7 @@ L.<span class="function">polygon</span>(conAgujero).<span class="function">addTo
                 
                 <div class="code-block">
 <span class="keyword">const</span> circulo = L.<span class="function">circle</span>(
-    [<span class="number">40.4300</span>, <span class="number">-3.7038</span>], <span class="comment">// Centro</span>
+    [<span class="number">4.6103</span>, <span class="number">-74.0706</span>], <span class="comment">// Torre Colpatria</span>
     {
         radius: <span class="number">500</span>,         <span class="comment">// Radio en METROS</span>
         color: <span class="string">'#9b59b6'</span>,
@@ -425,8 +425,8 @@ L.<span class="function">circleMarker</span>([<span class="number">40.41</span>,
     </div>
     
     <script>
-        // Crear mapa
-        const mapa = L.map('mapa').setView([40.4200, -3.7000], 13);
+        // Crear mapa centrado en Bogotá
+        const mapa = L.map('mapa').setView([4.6100, -74.0700], 14);
         
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
@@ -434,10 +434,10 @@ L.<span class="function">circleMarker</span>([<span class="number">40.41</span>,
         
         // Crear las formas
         const puntosRuta = [
-            [40.4168, -3.7038],
-            [40.4138, -3.6921],
-            [40.4200, -3.6850],
-            [40.4280, -3.6920]
+            [4.5981, -74.0760],
+            [4.6030, -74.0730],
+            [4.6100, -74.0710],
+            [4.6226, -74.0664]
         ];
         
         const polyline = L.polyline(puntosRuta, {
@@ -445,15 +445,15 @@ L.<span class="function">circleMarker</span>([<span class="number">40.41</span>,
             weight: 5,
             opacity: 0.8,
             dashArray: '10, 5'
-        }).bindPopup('<b>Ruta turística</b><br>Del centro al Retiro');
+        }).bindPopup('<b>El Septimazo</b><br>Ruta por la Carrera Séptima');
         
         const coordsPoligono = [
-            [40.4200, -3.7100],
-            [40.4150, -3.7150],
-            [40.4100, -3.7080],
-            [40.4100, -3.7000],
-            [40.4150, -3.6950],
-            [40.4200, -3.6980]
+            [4.6000, -74.0780],
+            [4.5950, -74.0780],
+            [4.5910, -74.0740],
+            [4.5910, -74.0680],
+            [4.5960, -74.0680],
+            [4.6010, -74.0720]
         ];
         
         const polygon = L.polygon(coordsPoligono, {
@@ -461,24 +461,24 @@ L.<span class="function">circleMarker</span>([<span class="number">40.41</span>,
             weight: 3,
             fillColor: '#3498db',
             fillOpacity: 0.3
-        }).bindPopup('<b>Zona Centro</b><br>Área histórica de Madrid');
+        }).bindPopup('<b>La Candelaria</b><br>Barrio histórico de Bogotá');
         
         const rectangle = L.rectangle([
-            [40.4250, -3.6850],
-            [40.4180, -3.6700]
+            [4.6250, -74.0700],
+            [4.6180, -74.0620]
         ], {
             color: '#2ecc71',
             weight: 3,
             fillColor: '#2ecc71',
             fillOpacity: 0.3
-        }).bindPopup('<b>Parque del Retiro</b><br>118 hectáreas de naturaleza');
+        }).bindPopup('<b>Parque Nacional</b><br>Pulmón verde en el centro-norte');
         
-        const circle = L.circle([40.4350, -3.7038], {
+        const circle = L.circle([4.6103, -74.0706], {
             radius: 400,
             color: '#9b59b6',
             fillColor: '#9b59b6',
             fillOpacity: 0.3
-        }).bindPopup('<b>Zona de cobertura</b><br>Radio: 400 metros');
+        }).bindPopup('<b>Torre Colpatria</b><br>Zona de influencia');
         
         // Objeto con todas las formas
         const formas = {

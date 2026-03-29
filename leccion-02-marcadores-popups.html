@@ -236,8 +236,8 @@
                 </div>
                 
                 <div class="code-block">
-<span class="comment">// Crear un marcador en coordenadas específicas</span>
-<span class="keyword">const</span> marcador = L.<span class="function">marker</span>([<span class="number">40.4168</span>, <span class="number">-3.7038</span>]);
+<span class="comment">// Crear un marcador en la Plaza de Bolívar</span>
+<span class="keyword">const</span> marcador = L.<span class="function">marker</span>([<span class="number">4.5981</span>, <span class="number">-74.0760</span>]);
 
 <span class="comment">// Añadirlo al mapa</span>
 marcador.<span class="function">addTo</span>(mapa);
@@ -250,9 +250,9 @@ marcador.<span class="function">addTo</span>(mapa);
                 
                 <div class="code-block">
 <span class="comment">// Marcador con popup</span>
-L.<span class="function">marker</span>([<span class="number">40.4168</span>, <span class="number">-3.7038</span>])
+L.<span class="function">marker</span>([<span class="number">4.5981</span>, <span class="number">-74.0760</span>])
     .<span class="function">addTo</span>(mapa)
-    .<span class="function">bindPopup</span>(<span class="string">'&lt;b&gt;Madrid&lt;/b&gt;&lt;br&gt;Capital de España'</span>)
+    .<span class="function">bindPopup</span>(<span class="string">'&lt;b&gt;Bogotá&lt;/b&gt;&lt;br&gt;Capital de Colombia'</span>)
     .<span class="function">openPopup</span>(); <span class="comment">// Abre el popup automáticamente</span>
                 </div>
                 
@@ -263,9 +263,9 @@ L.<span class="function">marker</span>([<span class="number">40.4168</span>, <sp
                 
                 <div class="code-block">
 <span class="comment">// Marcador con tooltip</span>
-L.<span class="function">marker</span>([<span class="number">40.4530</span>, <span class="number">-3.6883</span>])
+L.<span class="function">marker</span>([<span class="number">4.7011</span>, <span class="number">-74.1469</span>])
     .<span class="function">addTo</span>(mapa)
-    .<span class="function">bindTooltip</span>(<span class="string">'Aeropuerto de Barajas'</span>, {
+    .<span class="function">bindTooltip</span>(<span class="string">'Aeropuerto El Dorado'</span>, {
         permanent: <span class="keyword">false</span>,  <span class="comment">// Solo al pasar ratón</span>
         direction: <span class="string">'top'</span>   <span class="comment">// Posición del tooltip</span>
     });
@@ -302,13 +302,13 @@ L.<span class="function">marker</span>([<span class="number">40.42</span>, <span
                 <div class="code-block">
 <span class="keyword">const</span> contenidoHTML = <span class="string">`
     &lt;div style="text-align: center;"&gt;
-        &lt;h3&gt;🏛️ Museo del Prado&lt;/h3&gt;
-        &lt;p&gt;Uno de los museos más importantes&lt;/p&gt;
+        &lt;h3&gt;🏛️ Museo del Oro&lt;/h3&gt;
+        &lt;p&gt;La colección de orfebrería prehispánica más grande del mundo&lt;/p&gt;
         &lt;a href="#" target="_blank"&gt;Más info&lt;/a&gt;
     &lt;/div&gt;
 `</span>;
 
-L.<span class="function">marker</span>([<span class="number">40.4138</span>, <span class="number">-3.6921</span>])
+L.<span class="function">marker</span>([<span class="number">4.6015</span>, <span class="number">-74.0722</span>])
     .<span class="function">addTo</span>(mapa)
     .<span class="function">bindPopup</span>(contenidoHTML);
                 </div>
@@ -353,8 +353,8 @@ L.<span class="function">marker</span>([<span class="number">40.42</span>, <span
     </div>
     
     <script>
-        // Crear mapa centrado en Madrid
-        const mapa = L.map('mapa').setView([40.4168, -3.7038], 13);
+        // Crear mapa centrado en Bogotá
+        const mapa = L.map('mapa').setView([4.5981, -74.0760], 13);
         
         // Añadir capa de tiles
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -364,40 +364,40 @@ L.<span class="function">marker</span>([<span class="number">40.42</span>, <span
         // Array para guardar marcadores adicionales
         let marcadoresExtra = [];
         
-        // Marcador principal con popup
-        const marcadorMadrid = L.marker([40.4168, -3.7038])
+        // Marcador principal con popup (Plaza de Bolívar)
+        const marcadorBogota = L.marker([4.5981, -74.0760])
             .addTo(mapa)
-            .bindPopup('<b>Madrid</b><br>Capital de España<br>Población: ~3.3 millones')
+            .bindPopup('<b>Plaza de Bolívar</b><br>Centro histórico de Bogotá<br>Altitud: 2,640 m')
             .openPopup();
         
-        // Marcador del Museo del Prado con HTML enriquecido
-        const contenidoPrado = `
+        // Marcador del Museo del Oro con HTML enriquecido
+        const contenidoOro = `
             <div style="text-align: center;">
-                <h3 style="margin: 0 0 5px 0; color: #11998e;">🏛️ Museo del Prado</h3>
-                <p style="margin: 5px 0;">Uno de los museos de arte más importantes del mundo</p>
-                <small>Fundado en 1819</small>
+                <h3 style="margin: 0 0 5px 0; color: #11998e;">🏛️ Museo del Oro</h3>
+                <p style="margin: 5px 0;">La colección de orfebrería prehispánica más grande del mundo</p>
+                <small>Ubicado en el Parque Santander</small>
             </div>
         `;
         
-        L.marker([40.4138, -3.6921])
+        L.marker([4.6015, -74.0722])
             .addTo(mapa)
-            .bindPopup(contenidoPrado);
+            .bindPopup(contenidoOro);
         
-        // Marcador con tooltip
-        L.marker([40.4530, -3.6883])
+        // Marcador con tooltip (Aeropuerto El Dorado)
+        L.marker([4.7011, -74.1469])
             .addTo(mapa)
-            .bindTooltip('✈️ Aeropuerto de Barajas', {
+            .bindTooltip('✈️ Aeropuerto El Dorado', {
                 permanent: false,
                 direction: 'top'
             })
-            .bindPopup('<b>Aeropuerto Adolfo Suárez</b><br>Madrid-Barajas');
+            .bindPopup('<b>Aeropuerto Internacional El Dorado</b><br>Bogotá, Colombia');
         
-        // Marcador arrastrable
-        const marcadorDraggable = L.marker([40.4250, -3.7100], {
+        // Marcador arrastrable (Monserrate)
+        const marcadorDraggable = L.marker([4.6052, -74.0554], {
             draggable: true,
             title: 'Arrástrame!'
         }).addTo(mapa)
-          .bindPopup('¡Soy arrastrable! Muéveme por el mapa.')
+          .bindPopup('¡Soy el Cerro de Monserrate! Muéveme por el mapa.')
           .bindTooltip('Arrástrame', { permanent: true, direction: 'right' });
         
         // Evento cuando se suelta el marcador arrastrable
@@ -409,10 +409,10 @@ L.<span class="function">marker</span>([<span class="number">40.42</span>, <span
             e.target.openPopup();
         });
         
-        // Función para añadir marcador aleatorio
+        // Función para añadir marcador aleatorio dentro de Bogotá
         function agregarMarcador() {
-            const lat = 40.4 + (Math.random() - 0.5) * 0.1;
-            const lng = -3.7 + (Math.random() - 0.5) * 0.1;
+            const lat = 4.6 + (Math.random() - 0.5) * 0.1;
+            const lng = -74.08 + (Math.random() - 0.5) * 0.1;
             
             const nuevoMarcador = L.marker([lat, lng])
                 .addTo(mapa)

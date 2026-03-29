@@ -247,7 +247,8 @@
                 <div id="mapa"></div>
                 
                 <div class="coords-display">
-                    <h4>📍 Posición del cursor</h4>
+                    ¡Este es un mapa interactivo de Bogotá! 
+                    Haz clic en cualquier punto para ver sus coordenadas.
                     <div class="coords" id="coordenadas">Mueve el ratón sobre el mapa</div>
                 </div>
                 
@@ -291,14 +292,12 @@
                 
                 <div class="code-block">
 mapa.<span class="function">on</span>(<span class="string">'click'</span>, <span class="keyword">function</span>(e) {
-    <span class="comment">// e.latlng contiene las coordenadas del clic</span>
     <span class="keyword">const</span> lat = e.latlng.lat;
     <span class="keyword">const</span> lng = e.latlng.lng;
     
-    <span class="comment">// Añadir marcador donde hizo clic</span>
     L.<span class="function">marker</span>([lat, lng])
         .<span class="function">addTo</span>(mapa)
-        .<span class="function">bindPopup</span>(<span class="string">`Lat: ${lat.toFixed(4)}&lt;br&gt;Lng: ${lng.toFixed(4)}`</span>)
+        .<span class="function">bindPopup</span>(<span class="string">`Coordenadas en Bogotá:&lt;br&gt;Lat: ${lat.toFixed(4)}&lt;br&gt;Lng: ${lng.toFixed(4)}`</span>)
         .<span class="function">openPopup</span>();
 });
                 </div>
@@ -431,12 +430,26 @@ mapa.<span class="function">off</span>(<span class="string">'click'</span>);
     </div>
     
     <script>
-        // Crear mapa
-        const mapa = L.map('mapa').setView([40.4168, -3.7038], 13);
+        // Crear mapa centrado en Bogotá
+        const mapa = L.map('mapa').setView([4.5981, -74.0760], 13);
         
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(mapa);
+        
+        // --- 1. Evento CLICK ---
+        mapa.on('click', function(e) {
+            const lat = e.latlng.lat.toFixed(4);
+            const lng = e.latlng.lng.toFixed(4);
+            
+            // Añadir marcador donde se hizo clic
+            L.marker(e.latlng)
+                .addTo(mapa)
+                .bindPopup(`<b>Ubicación en Bogotá</b><br>Lat: ${lat}<br>Lng: ${lng}`)
+                .openPopup();
+                
+            mostrarLog(`Clic en: [${lat}, ${lng}]`);
+        });
         
         // Referencias DOM
         const eventLog = document.getElementById('eventLog');
@@ -446,11 +459,11 @@ mapa.<span class="function">off</span>(<span class="string">'click'</span>);
         let marcadores = [];
         
         // Función para añadir al log
-        function logEvento(tipo, mensaje) {
+        function mostrarLog(mensaje) {
             const item = document.createElement('div');
             item.className = 'event-item';
             const hora = new Date().toLocaleTimeString();
-            item.innerHTML = `<span class="event-type">[${tipo}]</span> ${hora} - ${mensaje}`;
+            item.innerHTML = `<span class="event-type">[Evento]</span> ${hora} - ${mensaje}`;
             eventLog.insertBefore(item, eventLog.firstChild);
             
             // Limitar a 50 eventos

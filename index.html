@@ -499,7 +499,7 @@
             <div class="feature">
                 <div class="feature-icon">🎯</div>
                 <h4>Ejemplos Reales</h4>
-                <p>Aprende con datos y ubicaciones reales de Madrid.</p>
+                <p>Aprende con datos y ubicaciones reales de Bogotá.</p>
             </div>
             <div class="feature">
                 <div class="feature-icon">📱</div>
@@ -530,17 +530,17 @@
             scrollWheelZoom: false,
             doubleClickZoom: false,
             attributionControl: false
-        }).setView([40.4168, -3.7038], 12);
+        }).setView([4.5981, -74.0760], 12);
         
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(mapaHero);
         
-        // Añadir algunos marcadores decorativos
+        // Añadir algunos marcadores decorativos en Bogotá
         const ubicaciones = [
-            [40.4138, -3.6921],
-            [40.4180, -3.7142],
-            [40.4168, -3.7038],
-            [40.4200, -3.7057],
-            [40.4153, -3.6845]
+            [4.6015, -74.0722], // Museo del Oro
+            [4.6052, -74.0554], // Monserrate
+            [4.5981, -74.0760], // Plaza de Bolívar
+            [4.6103, -74.0706], // Torre Colpatria
+            [4.6226, -74.0664]  // Parque Nacional
         ];
         
         ubicaciones.forEach(coords => {
@@ -556,8 +556,8 @@
         // Animación suave del mapa
         setInterval(() => {
             const currentCenter = mapaHero.getCenter();
-            const newLat = currentCenter.lat + (Math.random() - 0.5) * 0.01;
-            const newLng = currentCenter.lng + (Math.random() - 0.5) * 0.01;
+            const newLat = currentCenter.lat + (Math.random() - 0.5) * 0.005;
+            const newLng = currentCenter.lng + (Math.random() - 0.5) * 0.005;
             mapaHero.panTo([newLat, newLng], { animate: true, duration: 3 });
         }, 5000);
     </script>

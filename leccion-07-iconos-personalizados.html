@@ -564,24 +564,24 @@ lugares.<span class="function">forEach</span>(lugar => {
     </div>
     
     <script>
-        // Crear mapa
-        const mapa = L.map('mapa').setView([40.4168, -3.7038], 14);
+        // Crear mapa centrado en Bogotá
+        const mapa = L.map('mapa').setView([4.6300, -74.0700], 13);
         
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap &copy; CartoDB'
         }).addTo(mapa);
         
-        // 1. Icono con emoji simple
+        // 1. Icono con emoji simple - Monserrate
         const iconoEmoji = L.divIcon({
-            html: '<div style="font-size: 28px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">📍</div>',
+            html: '<div style="font-size: 28px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3);">🚠</div>',
             className: '',
             iconSize: [30, 30],
             iconAnchor: [15, 30]
         });
         
-        L.marker([40.4168, -3.7038], { icon: iconoEmoji })
+        L.marker([4.6052, -74.0554], { icon: iconoEmoji })
             .addTo(mapa)
-            .bindPopup('<b>Icono Emoji</b><br>Simple y efectivo');
+            .bindPopup('<b>Cerro de Monserrate</b><br>Icono de Funicular/Teleférico');
         
         // 2. Función para iconos numerados
         function iconoNumerado(numero, color = '#667eea') {
@@ -608,12 +608,12 @@ lugares.<span class="function">forEach</span>(lugar => {
             });
         }
         
-        // Crear ruta numerada
+        // Crear ruta numerada en La Candelaria
         const ruta = [
-            { lat: 40.4200, lng: -3.7100, nombre: 'Inicio - Plaza Mayor' },
-            { lat: 40.4180, lng: -3.7050, nombre: 'Puerta del Sol' },
-            { lat: 40.4150, lng: -3.6950, nombre: 'Fuente de Cibeles' },
-            { lat: 40.4138, lng: -3.6921, nombre: 'Final - Museo del Prado' }
+            { lat: 4.5981, lng: -74.0760, nombre: 'Plaza de Bolívar' },
+            { lat: 4.5977, lng: -74.0743, nombre: 'Centro Cultural García Márquez' },
+            { lat: 4.5987, lng: -74.0754, nombre: 'Casa del Florero' },
+            { lat: 4.5968, lng: -74.0714, nombre: 'Museo Botero' }
         ];
         
         ruta.forEach((punto, index) => {
@@ -635,7 +635,7 @@ lugares.<span class="function">forEach</span>(lugar => {
             restaurante: { emoji: '🍽️', color: '#e74c3c' },
             hotel: { emoji: '🏨', color: '#3498db' },
             museo: { emoji: '🏛️', color: '#9b59b6' },
-            metro: { emoji: '🚇', color: '#2ecc71' }
+            transmilenio: { emoji: '🚍', color: '#2ecc71' }
         };
         
         function iconoCategoria(tipo) {
@@ -660,12 +660,12 @@ lugares.<span class="function">forEach</span>(lugar => {
             });
         }
         
-        // Lugares de ejemplo
+        // Lugares de ejemplo en Bogotá
         const lugares = [
-            { lat: 40.4220, lng: -3.7150, nombre: 'Sobrino de Botín', tipo: 'restaurante' },
-            { lat: 40.4190, lng: -3.6940, nombre: 'Hotel Palace', tipo: 'hotel' },
-            { lat: 40.4100, lng: -3.6950, nombre: 'Museo Thyssen', tipo: 'museo' },
-            { lat: 40.4200, lng: -3.7055, nombre: 'Metro Gran Vía', tipo: 'metro' }
+            { lat: 4.6732, lng: -74.0531, nombre: 'Andrés D.C.', tipo: 'restaurante' },
+            { lat: 4.6115, lng: -74.0735, nombre: 'Hotel Tequendama', tipo: 'hotel' },
+            { lat: 4.6015, lng: -74.0722, nombre: 'Museo del Oro', tipo: 'museo' },
+            { lat: 4.6150, lng: -74.0685, nombre: 'Estación Museo Nacional', tipo: 'transmilenio' }
         ];
         
         lugares.forEach(lugar => {
@@ -674,7 +674,7 @@ lugares.<span class="function">forEach</span>(lugar => {
                 .bindPopup(`<b>${lugar.nombre}</b><br>Categoría: ${lugar.tipo}`);
         });
         
-        // 4. Icono con animación de pulso
+        // 4. Icono con animación de pulso - Parque de la 93
         const iconoPulso = L.divIcon({
             html: `
                 <div style="position: relative;">
@@ -711,11 +711,11 @@ lugares.<span class="function">forEach</span>(lugar => {
             iconAnchor: [10, 10]
         });
         
-        L.marker([40.4250, lng = -3.7000], { icon: iconoPulso })
+        L.marker([4.6767, -74.0483], { icon: iconoPulso })
             .addTo(mapa)
-            .bindPopup('<b>Ubicación en vivo</b><br>Efecto de pulso animado');
+            .bindPopup('<b>Parque de la 93</b><br>Efecto de pulso animado');
         
-        // 5. Icono con pin personalizado CSS
+        // 5. Icono con pin personalizado CSS - Planetario
         const iconoPin = L.divIcon({
             html: `
                 <div style="
@@ -744,9 +744,9 @@ lugares.<span class="function">forEach</span>(lugar => {
             iconAnchor: [15, 30]
         });
         
-        L.marker([40.4080, lng = -3.7100], { icon: iconoPin })
+        L.marker([4.6133, -74.0673], { icon: iconoPin })
             .addTo(mapa)
-            .bindPopup('<b>Pin CSS Personalizado</b><br>Sin necesidad de imágenes');
+            .bindPopup('<b>Planetario de Bogotá</b><br>Pin CSS Personalizado');
     </script>
 </body>
 </html>

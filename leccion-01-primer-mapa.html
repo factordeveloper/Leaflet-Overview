@@ -175,7 +175,7 @@
                 <h2>📍 Tu Primer Mapa</h2>
                 <div id="mapa"></div>
                 <p style="margin-top: 15px; color: #8892a8;">
-                    ¡Este es tu primer mapa! Está centrado en Madrid, España. 
+                    ¡Este es tu primer mapa! Está centrado en Bogotá, Colombia. 
                     Puedes hacer zoom con la rueda del ratón y arrastrarlo para moverte.
                 </p>
             </div>
@@ -212,9 +212,9 @@
                 </div>
                 
                 <div class="code-block">
-<span class="comment">// Crear el mapa centrado en Madrid</span>
+<span class="comment">// Crear el mapa centrado en Bogotá</span>
 <span class="keyword">const</span> mapa = L.<span class="function">map</span>(<span class="string">'mapa'</span>).<span class="function">setView</span>(
-    [<span class="number">40.4168</span>, <span class="number">-3.7038</span>], <span class="comment">// Coordenadas [lat, lng]</span>
+    [<span class="number">4.5981</span>, <span class="number">-74.0760</span>], <span class="comment">// Coordenadas [lat, lng]</span>
     <span class="number">13</span>                      <span class="comment">// Nivel de zoom (1-18)</span>
 );
 
@@ -265,8 +265,8 @@ L.<span class="function">tileLayer</span>(
     </div>
     
     <script>
-        // Crear el mapa centrado en Madrid
-        const mapa = L.map('mapa').setView([40.4168, -3.7038], 13);
+        // Crear el mapa centrado en Bogotá
+        const mapa = L.map('mapa').setView([4.5981, -74.0760], 13);
         
         // Añadir capa de mosaicos de OpenStreetMap
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {

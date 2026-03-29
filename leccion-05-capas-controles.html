@@ -207,13 +207,12 @@
             <div class="card">
                 <h2>🗺️ Mapa con Control de Capas</h2>
                 <div id="mapa"></div>
-                
                 <div class="layers-info">
                     <h4>🎛️ Controles disponibles:</h4>
                     <ul>
-                        <li>Usa el control de capas (esquina superior derecha) para cambiar el mapa base</li>
-                        <li>Activa/desactiva las capas de información (overlays)</li>
-                        <li>El control de escala está en la esquina inferior izquierda</li>
+                        <li>Usa el control de capas (esquina superior derecha) para cambiar el mapa base.</li>
+                        <li>Activa y desactivar diferentes capas de información (Museos, Parques y Vistas).</li>
+                        <li>El control de escala está en la esquina inferior izquierda.</li>
                     </ul>
                 </div>
             </div>
@@ -223,7 +222,7 @@
                 
                 <div class="explanation">
                     <h3>¿Qué son las capas base?</h3>
-                    <p>Son los mapas de fondo. Solo puede estar activa UNA a la vez (como estaciones de radio).</p>
+                    <p>Son los mapas de fondo. Solo puede estar activa UNA a la vez.</p>
                 </div>
                 
                 <div class="code-block">
@@ -233,27 +232,19 @@
     { attribution: <span class="string">'&copy; OpenStreetMap'</span> }
 );
 
-<span class="keyword">const</span> cartoDB = L.<span class="function">tileLayer</span>(
-    <span class="string">'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'</span>,
-    { attribution: <span class="string">'&copy; CartoDB'</span> }
-);
-
 <span class="keyword">const</span> dark = L.<span class="function">tileLayer</span>(
     <span class="string">'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'</span>,
-    { attribution: <span class="string">'&copy; CartoDB'</span> }
+    { attribution: <span class="string">'&copy; CARTO'</span> }
 );
 
 <span class="comment">// Objeto con las capas base</span>
 <span class="keyword">const</span> capasBase = {
     <span class="string">"OpenStreetMap"</span>: osm,
-    <span class="string">"CartoDB Claro"</span>: cartoDB,
-    <span class="string">"CartoDB Oscuro"</span>: dark
+    <span class="string">"Modo Oscuro"</span>: dark
 };
-                </div>
-                
-                <div class="tip">
-                    <strong>💡 Tip:</strong> El nombre que usas en el objeto es el que aparecerá 
-                    en el control de capas.
+
+<span class="comment">// Añadir al control de capas</span>
+L.<span class="function">control</span>.<span class="function">layers</span>(capasBase).<span class="function">addTo</span>(mapa);
                 </div>
             </div>
         </div>
@@ -268,49 +259,16 @@
                 </div>
                 
                 <div class="code-block">
-<span class="comment">// Crear marcadores</span>
-<span class="keyword">const</span> restaurante1 = L.<span class="function">marker</span>([<span class="number">40.42</span>, <span class="number">-3.71</span>])
-    .<span class="function">bindPopup</span>(<span class="string">'Restaurante A'</span>);
-<span class="keyword">const</span> restaurante2 = L.<span class="function">marker</span>([<span class="number">40.41</span>, <span class="number">-3.70</span>])
-    .<span class="function">bindPopup</span>(<span class="string">'Restaurante B'</span>);
-
-<span class="comment">// Agruparlos en un Layer Group</span>
-<span class="keyword">const</span> restaurantes = L.<span class="function">layerGroup</span>([
-    restaurante1,
-    restaurante2
+<span class="comment">// 2. Capas de Superposición (Overlays)</span>
+<span class="keyword">const</span> museos = L.<span class="function">layerGroup</span>([
+    L.<span class="function">marker</span>([<span class="number">4.6015</span>, <span class="number">-74.0722</span>]).<span class="function">bindPopup</span>(<span class="string">'Museo del Oro'</span>),
+    L.<span class="function">marker</span>([<span class="number">4.5968</span>, <span class="number">-74.0714</span>]).<span class="function">bindPopup</span>(<span class="string">'Museo Botero'</span>)
 ]);
 
-<span class="comment">// Añadir todo el grupo al mapa</span>
-restaurantes.<span class="function">addTo</span>(mapa);
-
-<span class="comment">// Puedes añadir más elementos después</span>
-<span class="keyword">const</span> restaurante3 = L.<span class="function">marker</span>([<span class="number">40.415</span>, <span class="number">-3.695</span>]);
-restaurantes.<span class="function">addLayer</span>(restaurante3);
-
-<span class="comment">// O eliminar elementos</span>
-restaurantes.<span class="function">removeLayer</span>(restaurante1);
-
-<span class="comment">// Limpiar todo el grupo</span>
-restaurantes.<span class="function">clearLayers</span>();
-                </div>
-                
-                <div class="explanation">
-                    <h3>Feature Group</h3>
-                    <p>Similar a LayerGroup pero con métodos adicionales:</p>
-                </div>
-                
-                <div class="code-block">
-<span class="keyword">const</span> zonas = L.<span class="function">featureGroup</span>([
-    L.<span class="function">polygon</span>([[<span class="number">40.42</span>,<span class="number">-3.71</span>], [<span class="number">40.41</span>,<span class="number">-3.72</span>], [<span class="number">40.40</span>,<span class="number">-3.70</span>]]),
-    L.<span class="function">circle</span>([<span class="number">40.43</span>, <span class="number">-3.69</span>], {radius: <span class="number">300</span>})
-]).<span class="function">addTo</span>(mapa);
-
-<span class="comment">// FeatureGroup permite:</span>
-zonas.<span class="function">getBounds</span>();     <span class="comment">// Obtener límites del grupo</span>
-zonas.<span class="function">bindPopup</span>(<span class="string">'Todas las zonas'</span>); <span class="comment">// Popup para todo</span>
-
-<span class="comment">// Ajustar vista a todo el grupo</span>
-mapa.<span class="function">fitBounds</span>(zonas.<span class="function">getBounds</span>());
+<span class="keyword">const</span> parques = L.<span class="function">layerGroup</span>([
+    L.<span class="function">marker</span>([<span class="number">4.6226</span>, <span class="number">-74.0664</span>]).<span class="function">bindPopup</span>(<span class="string">'Parque Nacional'</span>),
+    L.<span class="function">marker</span>([<span class="number">4.6583</span>, <span class="number">-74.0939</span>]).<span class="function">bindPopup</span>(<span class="string">'Parque Simón Bolívar'</span>)
+]);
                 </div>
             </div>
             
@@ -323,88 +281,20 @@ mapa.<span class="function">fitBounds</span>(zonas.<span class="function">getBou
                 </div>
                 
                 <div class="code-block">
-<span class="comment">// Capas base (solo una activa)</span>
-<span class="keyword">const</span> capasBase = {
-    <span class="string">"OpenStreetMap"</span>: osm,
-    <span class="string">"CartoDB"</span>: cartoDB
-};
-
 <span class="comment">// Overlays (pueden estar varias activas)</span>
 <span class="keyword">const</span> overlays = {
-    <span class="string">"🍽️ Restaurantes"</span>: restaurantes,
-    <span class="string">"🏨 Hoteles"</span>: hoteles,
-    <span class="string">"🚌 Transporte"</span>: transporte
+    <span class="string">"🏛️ Museos"</span>: museos,
+    <span class="string">"🌳 Parques"</span>: parques,
+    <span class="string">"🔭 Vistas"</span>: vistasLayer
 };
 
 <span class="comment">// Crear y añadir el control</span>
 L.<span class="function">control</span>.<span class="function">layers</span>(capasBase, overlays, {
-    collapsed: <span class="keyword">false</span>,    <span class="comment">// Expandido por defecto</span>
-    position: <span class="string">'topright'</span> <span class="comment">// Posición</span>
-}).<span class="function">addTo</span>(mapa);
-                </div>
-                
-                <div class="warning">
-                    <strong>⚠️ Importante:</strong> Las capas base usan radio buttons (solo una), 
-                    los overlays usan checkboxes (múltiples).
-                </div>
-                
-                <div class="explanation">
-                    <h3>Otros controles</h3>
-                </div>
-                
-                <div class="code-block">
-<span class="comment">// Control de escala</span>
-L.<span class="function">control</span>.<span class="function">scale</span>({
-    metric: <span class="keyword">true</span>,     <span class="comment">// Mostrar metros/km</span>
-    imperial: <span class="keyword">false</span>,  <span class="comment">// Ocultar millas</span>
-    position: <span class="string">'bottomleft'</span>
-}).<span class="function">addTo</span>(mapa);
-
-<span class="comment">// Control de zoom (se añade por defecto)</span>
-L.<span class="function">control</span>.<span class="function">zoom</span>({
-    position: <span class="string">'topleft'</span>,
-    zoomInTitle: <span class="string">'Acercar'</span>,
-    zoomOutTitle: <span class="string">'Alejar'</span>
-}).<span class="function">addTo</span>(mapa);
-
-<span class="comment">// Control de atribución</span>
-L.<span class="function">control</span>.<span class="function">attribution</span>({
-    prefix: <span class="string">'Mi App'</span>
+    collapsed: <span class="keyword">false</span>,  <span class="comment">// Mantener expandido</span>
+    position: <span class="string">'topright'</span>
 }).<span class="function">addTo</span>(mapa);
                 </div>
             </div>
-        </div>
-        
-        <div class="card" style="margin-top: 20px;">
-            <h2>🔧 Control Personalizado</h2>
-            
-            <div class="code-block">
-<span class="comment">// Crear un control personalizado</span>
-<span class="keyword">const</span> MiControl = L.Control.<span class="function">extend</span>({
-    options: {
-        position: <span class="string">'bottomright'</span>
-    },
-    
-    onAdd: <span class="keyword">function</span>(map) {
-        <span class="comment">// Crear el contenedor del control</span>
-        <span class="keyword">const</span> container = L.DomUtil.<span class="function">create</span>(<span class="string">'div'</span>, <span class="string">'mi-control'</span>);
-        container.innerHTML = <span class="string">'&lt;button onclick="centrarMapa()"&gt;🎯 Centrar&lt;/button&gt;'</span>;
-        
-        <span class="comment">// Evitar que clics propaguen al mapa</span>
-        L.DomEvent.<span class="function">disableClickPropagation</span>(container);
-        
-        <span class="keyword">return</span> container;
-    }
-});
-
-<span class="comment">// Instanciar y añadir</span>
-<span class="keyword">new</span> MiControl().<span class="function">addTo</span>(mapa);
-
-<span class="comment">// Función del botón</span>
-<span class="keyword">function</span> <span class="function">centrarMapa</span>() {
-    mapa.<span class="function">setView</span>([<span class="number">40.4168</span>, <span class="number">-3.7038</span>], <span class="number">13</span>);
-}
-                </div>
         </div>
         
         <div class="nav-buttons">
@@ -414,104 +304,66 @@ L.<span class="function">control</span>.<span class="function">attribution</span
     </div>
     
     <script>
-        // Definir capas base
+        // Capas Base
         const osm = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            attribution: '&copy; OpenStreetMap'
         });
         
-        const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://carto.com/">CartoDB</a>'
+        const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; CARTO'
         });
         
-        const cartoDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://carto.com/">CartoDB</a>'
+        const terrain = L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/terrain/{z}/{x}/{y}.jpg', {
+            attribution: 'Map tiles by Stamen Design'
         });
         
-        const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '&copy; <a href="https://www.esri.com/">Esri</a>'
-        });
-        
-        // Crear el mapa con una capa base inicial
+        // Crear mapa centrado en Bogotá
         const mapa = L.map('mapa', {
-            center: [40.4168, -3.7038],
+            center: [4.6100, -74.0700],
             zoom: 13,
-            layers: [osm] // Capa inicial
+            layers: [osm]
         });
         
-        // Crear grupos de overlays
-        
-        // Grupo de Restaurantes
-        const restaurantes = L.layerGroup([
-            L.marker([40.4200, -3.7050]).bindPopup('🍽️ <b>La Casa del Abuelo</b><br>Cocina tradicional'),
-            L.marker([40.4150, -3.7100]).bindPopup('🍽️ <b>Sobrino de Botín</b><br>Asador desde 1725'),
-            L.marker([40.4180, -3.6980]).bindPopup('🍽️ <b>Mercado de San Miguel</b><br>Tapas gourmet')
+        // 1. Grupo de Museos
+        const museos = L.layerGroup([
+            L.marker([4.6015, -74.0722]).bindPopup('<b>Museo del Oro</b>'),
+            L.marker([4.5968, -74.0714]).bindPopup('<b>Museo Botero</b>'),
+            L.marker([4.6158, -74.0683]).bindPopup('<b>Museo Nacional</b>')
         ]);
         
-        // Grupo de Hoteles
-        const hoteles = L.layerGroup([
-            L.marker([40.4190, -3.6950]).bindPopup('🏨 <b>Hotel Palace</b><br>5 estrellas'),
-            L.marker([40.4220, -3.7080]).bindPopup('🏨 <b>Hotel Ritz</b><br>Lujo clásico'),
-            L.marker([40.4130, -3.7020]).bindPopup('🏨 <b>Hotel Urban</b><br>Diseño moderno')
+        // 2. Grupo de Parques
+        const parques = L.layerGroup([
+            L.marker([4.6226, -74.0664]).bindPopup('<b>Parque Nacional</b>'),
+            L.marker([4.6583, -74.0939]).bindPopup('<b>Parque Simón Bolívar</b>'),
+            L.marker([4.6767, -74.0483]).bindPopup('<b>Parque de la 93</b>')
         ]);
         
-        // Grupo de Monumentos (círculos)
-        const monumentos = L.featureGroup([
-            L.circle([40.4138, -3.6921], {
-                radius: 100,
-                color: '#e74c3c',
-                fillOpacity: 0.3
-            }).bindPopup('🏛️ <b>Museo del Prado</b>'),
-            L.circle([40.4186, -3.6883], {
-                radius: 80,
-                color: '#e74c3c',
-                fillOpacity: 0.3
-            }).bindPopup('🏛️ <b>Puerta de Alcalá</b>'),
-            L.circle([40.4168, -3.7038], {
-                radius: 70,
-                color: '#e74c3c',
-                fillOpacity: 0.3
-            }).bindPopup('🏛️ <b>Puerta del Sol</b>')
+        // 3. Grupo de Vistas
+        const vistas = L.layerGroup([
+            L.marker([4.6052, -74.0554]).bindPopup('<b>Monserrate</b>'),
+            L.marker([4.6103, -74.0706]).bindPopup('<b>Torre Colpatria</b>')
         ]);
         
-        // Grupo de Zonas (polígonos)
-        const zonas = L.featureGroup([
-            L.polygon([
-                [40.4220, -3.7100],
-                [40.4180, -3.7150],
-                [40.4140, -3.7100],
-                [40.4140, -3.7000],
-                [40.4180, -3.6950],
-                [40.4220, -3.7000]
-            ], {
-                color: '#3498db',
-                fillOpacity: 0.2
-            }).bindPopup('📍 <b>Centro Histórico</b>')
-        ]);
+        // Añadir algunos grupos al mapa inicialmente
+        museos.addTo(mapa);
         
-        // Añadir algunos overlays por defecto
-        restaurantes.addTo(mapa);
-        monumentos.addTo(mapa);
-        
-        // Objeto de capas base
-        const capasBase = {
-            "🗺️ OpenStreetMap": osm,
-            "🌤️ CartoDB Claro": cartoLight,
-            "🌙 CartoDB Oscuro": cartoDark,
-            "🛰️ Satélite (Esri)": esriSatellite
+        // Capas Base para el control
+        const baseMaps = {
+            "Mapa Estándar": osm,
+            "Modo Oscuro": dark,
+            "Relieve": terrain
         };
         
-        // Objeto de overlays
-        const overlays = {
-            "🍽️ Restaurantes": restaurantes,
-            "🏨 Hoteles": hoteles,
-            "🏛️ Monumentos": monumentos,
-            "📍 Zonas": zonas
+        // Superposiciones para el control
+        const overlayMaps = {
+            "🏛️ Museos": museos,
+            "🌳 Parques": parques,
+            "🔭 Vistas": vistas
         };
         
-        // Crear control de capas
-        L.control.layers(capasBase, overlays, {
-            collapsed: true,
-            position: 'topright'
+        // Añadir el control de capas al mapa
+        L.control.layers(baseMaps, overlayMaps, {
+            collapsed: false
         }).addTo(mapa);
         
         // Añadir control de escala
@@ -520,32 +372,6 @@ L.<span class="function">control</span>.<span class="function">attribution</span
             imperial: false,
             position: 'bottomleft'
         }).addTo(mapa);
-        
-        // Control personalizado para centrar
-        const ControlCentrar = L.Control.extend({
-            options: {
-                position: 'bottomright'
-            },
-            
-            onAdd: function(map) {
-                const container = L.DomUtil.create('div', 'leaflet-bar');
-                container.innerHTML = `
-                    <a href="#" title="Centrar mapa" 
-                       style="display: flex; align-items: center; justify-content: center; 
-                              width: 34px; height: 34px; background: white; text-decoration: none;
-                              font-size: 18px;"
-                       onclick="centrarMapa(); return false;">🎯</a>
-                `;
-                L.DomEvent.disableClickPropagation(container);
-                return container;
-            }
-        });
-        
-        new ControlCentrar().addTo(mapa);
-        
-        function centrarMapa() {
-            mapa.setView([40.4168, -3.7038], 13);
-        }
     </script>
 </body>
 </html>
